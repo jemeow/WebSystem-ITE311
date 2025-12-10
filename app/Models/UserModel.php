@@ -12,28 +12,28 @@ class UserModel extends Model
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $protectFields = true;
+
     protected $allowedFields = [
         'name',
         'email',
         'password',
         'role',
+        'status',
         'created_at',
         'updated_at'
     ];
 
-    // Dates
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     protected $dateFormat = 'datetime';
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
     protected $deletedField = 'deleted_at';
 
-    // Validation
     protected $validationRules = [
         'name' => 'required|min_length[3]|max_length[50]',
-        'email' => 'required|valid_email|is_unique[users.email,id,{id}]',
+        'email' => 'required|valid_email|is_unique[users.email]',
         'password' => 'required|min_length[6]',
-        'role' => 'required|in_list[student,instructor,admin]'
+        'role' => 'required|in_list[student,teacher,admin]'
     ];
 
     protected $validationMessages = [
@@ -53,21 +53,17 @@ class UserModel extends Model
         ],
         'role' => [
             'required' => 'Role is required',
-            'in_list' => 'Role must be either student, instructor, or admin'
+            'in_list' => 'Role must be either student, teacher, or admin'
         ]
     ];
 
     protected $skipValidation = false;
     protected $cleanValidationRules = true;
 
-    // Callbacks
     protected $allowCallbacks = true;
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];
 
-    /**
-     * Hash password before saving to database
-     */
     protected function hashPassword(array $data)
     {
         if (isset($data['data']['password'])) {
@@ -77,46 +73,38 @@ class UserModel extends Model
         return $data;
     }
 
-    /**
-     * Find user by username or email
-     */
-    public function findUserByUsernameOrEmail($identifier)
+    public function findUserByNameOrEmail($identifier)
     {
-        return $this->where('username', $identifier)
+        return $this->where('name', $identifier)
                     ->orWhere('email', $identifier)
                     ->first();
     }
 
-    /**
-     * Verify user credentials
-     */
     public function verifyCredentials($identifier, $password)
     {
-        $user = $this->findUserByUsernameOrEmail($identifier);
-        
+        $user = $this->findUserByNameOrEmail($identifier);
+
         if ($user && password_verify($password, $user['password'])) {
+            // Check if user is active
+            if ($user['status'] === 'inactive') {
+                return false;
+            }
             return $user;
         }
-        
+
         return false;
     }
 
-    /**
-     * Get user profile data (without password)
-     */
     public function getUserProfile($userId)
     {
-        return $this->select('id, username, email, created_at, updated_at')
+        return $this->select('id, name, email, created_at, updated_at')
                     ->where('id', $userId)
                     ->first();
     }
 
-    /**
-     * Update user profile
-     */
     public function updateProfile($userId, $data)
     {
-        $allowedFields = ['username', 'email'];
+        $allowedFields = ['name', 'email'];
         $updateData = [];
 
         foreach ($allowedFields as $field) {
@@ -133,9 +121,6 @@ class UserModel extends Model
         return false;
     }
 
-    /**
-     * Change user password
-     */
     public function changePassword($userId, $newPassword)
     {
         $data = [
@@ -144,5 +129,48 @@ class UserModel extends Model
         ];
 
         return $this->update($userId, $data);
+    }
+
+    /**
+     * Deactivate a user (soft delete)
+     */
+    public function deactivateUser($userId)
+    {
+        return $this->update($userId, ['status' => 'inactive']);
+    }
+
+    /**
+     * Activate a user
+     */
+    public function activateUser($userId)
+    {
+        return $this->update($userId, ['status' => 'active']);
+    }
+
+    /**
+     * Get only active users
+     */
+    public function getActiveUsers()
+    {
+        return $this->where('status', 'active')->findAll();
+    }
+
+    /**
+     * Get only inactive users
+     */
+    public function getInactiveUsers()
+    {
+        return $this->where('status', 'inactive')->findAll();
+    }
+
+    /**
+     * Get all users with status filter option
+     */
+    public function getAllUsersWithStatus($status = null)
+    {
+        if ($status !== null) {
+            return $this->where('status', $status)->findAll();
+        }
+        return $this->findAll();
     }
 }

@@ -2,62 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Web System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <div class="container-fluid">
-    <a class="navbar-brand fw-bold text-white" href="/">ITE311</a>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link text-white" href="/">Home</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="about">About</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="contact">Contact</a></li>
-      </ul>
-      <ul class="navbar-nav">
-        <?php if (session()->get('isLoggedIn')): ?>
-          <li class="nav-item"><a class="nav-link text-white" href="dashboard">Dashboard</a></li>
-          <li class="nav-item"><span class="nav-link text-white">Hello, <?= session()->get('name') ?></span></li>
-          <li class="nav-item"><a class="nav-link text-white" href="logout">Logout</a></li>
-        <?php else: ?>
-          <li class="nav-item"><a class="nav-link active text-white fw-bold" href="login">Login</a></li>
-          <li class="nav-item"><a class="nav-link text-white" href="register">Register</a></li>
-        <?php endif; ?>
-      </ul>
+<body>
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="card shadow-sm border-0" style="width: 100%; max-width: 350px;">
+            <div class="card-body p-4">
+                <h3 class="mb-4 text-center">Login</h3>
+                <?php if(session()->getFlashdata('success')): ?>
+                    <div class="alert alert-success small py-2 mb-2 text-center"><?= session()->getFlashdata('success') ?></div>
+                <?php endif; ?>
+                <form action="<?= site_url('login') ?>" method="post">
+                    <?= csrf_field() ?>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control form-control-sm" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="<?= site_url('register') ?>" class="btn btn-link p-0">Don't have an account? Register</a>
+                </div>
+            </div>
+        </div>
     </div>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-  </div>
-</nav>
-
-<div class="container mt-5">
-    <h2>Login</h2>
-    <?php if(session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
-    <?php endif; ?>
-    <?php if(session()->getFlashdata('success')): ?>
-        <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
-    <?php endif; ?>
-
-    <form action="login" method="post">
-        <?= csrf_field() ?>
-        <div class="mb-3">
-            <label>Email</label>
-            <input type="email" name="email" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label>Password</label>
-            <input type="password" name="password" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-success">Login</button>
-        <a href="register" class="btn btn-link">Don't have an account? Register</a>
-    </form>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        <?php if(session()->getFlashdata('error')): ?>
+            alert('<?= esc(session()->getFlashdata('error')) ?>');
+        <?php endif; ?>
+    </script>
 </body>
 </html>

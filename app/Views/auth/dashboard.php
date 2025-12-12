@@ -7,49 +7,181 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
         body {
-            background-color: #f8f9fa;
+            background: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .header-nav {
-            background-color: #1d3557;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: #133980;
+            box-shadow: none;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .header-nav .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.25rem;
+            font-weight: 400;
             color: #fff !important;
         }
         .header-nav .nav-link {
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.9);
             padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
+            border-radius: 2px;
             margin: 0 0.2rem;
-            transition: all 0.3s;
+            transition: background 0.2s;
+            font-weight: 400;
         }
         .header-nav .nav-link:hover,
         .header-nav .nav-link.active {
             color: #fff;
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255,255,255,0.2);
+        }
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 2px;
+            box-shadow: none;
+            transition: box-shadow 0.2s;
+            background: white;
         }
         .stat-card {
-            border-left: 4px solid #457b9d;
+            border-left: 3px solid #2C5F8D;
         }
-        .admin-card {
-            border-left-color: #e63946;
-        }
-        .teacher-card {
-            border-left-color: #f77f00;
-        }
-        .student-card {
-            border-left-color: #06d6a0;
+        .admin-card, .teacher-card, .student-card {
+            border-left-color: #2C5F8D;
         }
         .hover-shadow {
-            transition: all 0.3s;
             cursor: pointer;
         }
         .hover-shadow:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15)!important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .btn {
+            border-radius: 2px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: background 0.2s;
+            border: none;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: #2C5F8D;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #234a6d;
+            color: white;
+        }
+        .btn-success {
+            background: #48A868;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #3d8f57;
+            color: white;
+        }
+        .btn-warning {
+            background: #6366F1;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #4F46E5;
+            color: white;
+        }
+        .btn-danger {
+            background: #f9fafb;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        .btn-danger:hover {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        .btn-outline-primary {
+            border: 1px solid #2C5F8D;
+            color: #2C5F8D;
+            background: white;
+        }
+        .btn-outline-primary:hover {
+            background: #2C5F8D;
+            color: white;
+        }
+        .badge {
+            padding: 0.4rem 0.75rem;
+            font-weight: 400;
+            border-radius: 2px;
+            font-size: 0.85rem;
+        }
+        .badge.bg-danger {
+            background: #FEE2E2 !important;
+            color: #991B1B;
+        }
+        .badge.bg-warning {
+            background: #E0E7FF !important;
+            color: #3730A3;
+        }
+        .badge.bg-success {
+            background: #D1FAE5 !important;
+            color: #065F46;
+        }
+        .alert {
+            border: none;
+            border-radius: 2px;
+            border-left: 3px solid #2C5F8D;
+        }
+        .table {
+            border: none;
+        }
+        .table thead th {
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 0.85rem;
+            padding: 0.75rem;
+        }
+        .table tbody tr {
+            transition: background 0.2s;
+        }
+        .table tbody tr:hover {
+            background: #f9fafb;
+        }
+        .table td {
+            border-top: 1px solid #f3f4f6;
+            padding: 0.75rem;
+            vertical-align: middle;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        h1, h2, h3, h4, h5 {
+            color: #1f2937;
+            font-weight: 400;
+        }
+        .text-muted {
+            color: #6b7280 !important;
+        }
+        .form-control {
+            border: 1px solid #e5e7eb;
+            border-radius: 2px;
+            padding: 0.6rem 0.75rem;
+            transition: border 0.2s;
+            font-size: 0.95rem;
+            color: #374151;
+        }
+        .form-control:focus {
+            border-color: #2C5F8D;
+            box-shadow: none;
+            outline: none;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e8eaed;
+            padding: 1rem 1.25rem;
+        }
+        .card-body {
+            padding: 1.25rem;
         }
     </style>
 </head>
@@ -70,13 +202,31 @@
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
-                    <?php if($user['role'] === 'teacher'): ?>
+                    <?php if($user['role'] === 'admin'): ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:void(0)">
-                            <i class="bi bi-book"></i> My Courses
+                        <a class="nav-link" href="<?= site_url('admin/users') ?>">
+                            <i class="bi bi-people"></i> Users
                         </a>
                     </li>
-                    <?php elseif($user['role'] === 'student'): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('admin/courses') ?>">
+                            <i class="bi bi-book"></i> Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('admin/enrollments') ?>">
+                            <i class="bi bi-journals"></i> Enrollments
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if($user['role'] === 'teacher'): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('teacher/enrollments') ?>">
+                            <i class="bi bi-clipboard-check"></i> Enrollments
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if($user['role'] === 'student'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="javascript:void(0)">
                             <i class="bi bi-book"></i> My Courses
@@ -188,6 +338,138 @@
                         </div>
                     </div>
 
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-4">
+                            <div class="card stat-card shadow-sm" style="border: 1px solid #e5e7eb;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="text-muted mb-1">Total Courses</p>
+                                            <h3 class="mb-0"><?= $totalCourses ?></h3>
+                                        </div>
+                                        <div class="fs-1" style="color: #6b7280;">
+                                            <i class="bi bi-book"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card shadow-sm" style="border: 1px solid #e5e7eb;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="text-muted mb-1">Active Enrollments</p>
+                                            <h3 class="mb-0"><?= isset($totalEnrollments) ? $totalEnrollments : 0 ?></h3>
+                                        </div>
+                                        <div class="fs-1" style="color: #6b7280;">
+                                            <i class="bi bi-journal-check"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card shadow-sm border-warning">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="text-muted mb-1">Pending Approvals</p>
+                                            <h3 class="mb-0"><?= isset($pendingCount) ? $pendingCount : 0 ?></h3>
+                                        </div>
+                                        <div class="fs-1 text-warning">
+                                            <i class="bi bi-clock-history"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Enrollments Alert Card -->
+                    <?php if(isset($pendingCount) && $pendingCount > 0): ?>
+                    <div class="card shadow-sm border-warning mb-4">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="fs-1 text-warning me-3">
+                                            <i class="bi bi-clock-history"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1">
+                                                <span class="badge bg-warning text-dark fs-6"><?= $pendingCount ?></span>
+                                                Pending Enrollment<?= $pendingCount > 1 ? 's' : '' ?> Awaiting Approval
+                                            </h5>
+                                            <p class="text-muted mb-0">
+                                                <?= $pendingCount ?> student<?= $pendingCount > 1 ? 's have' : ' has' ?> requested to enroll in courses and need<?= $pendingCount > 1 ? '' : 's' ?> your approval.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <a href="<?= site_url('admin/enrollments/pending-view') ?>" class="btn btn-warning btn-lg">
+                                        <i class="bi bi-list-check"></i> Review Requests
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Quick Action Cards -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <a href="<?= site_url('admin/users') ?>" class="text-decoration-none">
+                                <div class="card hover-shadow h-100 border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people-fill fs-1 mb-3" style="color: #6b7280;"></i>
+                                        <h5 class="card-title">Manage Users</h5>
+                                        <p class="text-muted small">Add, edit, or remove users</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="<?= site_url('admin/courses') ?>" class="text-decoration-none">
+                                <div class="card hover-shadow h-100" style="border: 1px solid #e5e7eb;">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-book-fill fs-1 mb-3" style="color: #6b7280;"></i>
+                                        <h5 class="card-title">Manage Courses</h5>
+                                        <p class="text-muted small">Create and edit courses</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="<?= site_url('admin/enrollments') ?>" class="text-decoration-none">
+                                <div class="card hover-shadow h-100 border-success">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-journal-plus fs-1 text-success mb-3"></i>
+                                        <h5 class="card-title">Enrollments</h5>
+                                        <p class="text-muted small">Manage student enrollments</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="<?= site_url('admin/enrollments/pending-view') ?>" class="text-decoration-none">
+                                <div class="card hover-shadow h-100 border-warning">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-clock-history fs-1 text-warning mb-3"></i>
+                                        <h5 class="card-title">
+                                            Pending Approvals
+                                            <?php if(isset($pendingCount) && $pendingCount > 0): ?>
+                                                <span class="badge bg-danger"><?= $pendingCount ?></span>
+                                            <?php endif; ?>
+                                        </h5>
+                                        <p class="text-muted small">Review enrollment requests</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Recent Users Table -->
                     <div class="card shadow-sm">
                         <div class="card-header bg-white">
@@ -244,6 +526,29 @@
 
                 <?php elseif($user['role'] === 'teacher'): ?>
                     <!-- TEACHER DASHBOARD -->
+                    
+                    <!-- Pending Enrollment Notification -->
+                    <?php if(isset($pendingCount) && $pendingCount > 0): ?>
+                    <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="alert-heading mb-2">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> Pending Enrollment Requests
+                                </h5>
+                                <p class="mb-0">
+                                    <?= $pendingCount ?> student<?= $pendingCount > 1 ? 's have' : ' has' ?> requested to enroll in your courses and need<?= $pendingCount > 1 ? '' : 's' ?> your approval.
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="<?= site_url('teacher/enrollments') ?>" class="btn btn-warning">
+                                    <i class="bi bi-list-check"></i> Review Requests
+                                </a>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <?php endif; ?>
+                    
                     <div class="row g-4 mb-4">
                         <div class="col-md-4">
                             <div class="card stat-card instructor-card shadow-sm">
@@ -301,9 +606,9 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <button class="btn btn-warning btn-lg">
-                                            <i class="bi bi-plus-circle"></i> Create New Course
-                                        </button>
+                                        <a href="<?= site_url('teacher/enrollments') ?>" class="btn btn-warning btn-lg">
+                                            <i class="bi bi-clipboard-check"></i> Manage Enrollments
+                                        </a>
                                         <button class="btn btn-outline-warning">
                                             <i class="bi bi-file-earmark-plus"></i> Add Assignment
                                         </button>
@@ -326,30 +631,141 @@
                         </div>
                     </div>
 
-                    <!-- System Overview Section for Teacher -->
+                    <!-- My Courses Section for Teacher -->
+                    <?php if(isset($teacherCourses) && !empty($teacherCourses)): ?>
                     <div class="row g-4 mt-2">
                         <div class="col-12">
                             <div class="card shadow-sm">
                                 <div class="card-header bg-warning text-white">
+                                    <h5 class="mb-0"><i class="bi bi-book-fill"></i> My Assigned Courses</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <?php foreach($teacherCourses as $course): ?>
+                                            <div class="col-md-6">
+                                                <div class="card h-100" style="border: 1px solid #e5e7eb;">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">
+                                                            <span class="badge bg-warning"><?= esc($course['course_code']) ?></span>
+                                                            <?= esc($course['course_name']) ?>
+                                                        </h6>
+                                                        <p class="card-text small text-muted mb-2"><?= esc($course['description']) ?></p>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-award"></i> <?= $course['credits'] ?> Credits
+                                                        </small>
+                                                        <?php if (!empty($course['schedule_days']) && !empty($course['schedule_start_time'])): ?>
+                                                            <div class="mt-2 p-2" style="background: #fff3cd; border-radius: 4px;">
+                                                                <small class="fw-bold text-dark">
+                                                                    <i class="bi bi-calendar-week"></i> <?= esc($course['schedule_days']) ?>
+                                                                </small>
+                                                                <br>
+                                                                <small class="fw-bold text-dark">
+                                                                    <i class="bi bi-clock"></i> <?= date('g:i A', strtotime($course['schedule_start_time'])) ?> - <?= date('g:i A', strtotime($course['schedule_end_time'])) ?>
+                                                                </small>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Student Enrollment Requests Section -->
+                    <div class="row g-4 mt-2">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header" style="background: #f3f4f6; color: #374151; border-bottom: 1px solid #e5e7eb;">
+                                    <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Student Enrollment Requests</h5>
+                                    <?php if(isset($pendingCount) && $pendingCount > 0): ?>
+                                        <a href="<?= site_url('teacher/enrollments') ?>" class="btn btn-sm btn-light">
+                                            <i class="bi bi-arrow-right-circle"></i> View All
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="card-body">
+                                    <?php if(isset($pendingEnrollments) && !empty($pendingEnrollments)): ?>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Student</th>
+                                                        <th>Course</th>
+                                                        <th>Request Date</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php 
+                                                    $displayLimit = 5;
+                                                    $displayEnrollments = array_slice($pendingEnrollments, 0, $displayLimit);
+                                                    foreach($displayEnrollments as $enrollment): 
+                                                    ?>
+                                                        <tr>
+                                                            <td>
+                                                                <div>
+                                                                    <strong><?= esc($enrollment['student_name']) ?></strong>
+                                                                    <br>
+                                                                    <small class="text-muted"><?= esc($enrollment['email']) ?></small>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div>
+                                                                    <strong><?= esc($enrollment['course_code']) ?></strong>
+                                                                    <br>
+                                                                    <small class="text-muted"><?= esc($enrollment['course_name']) ?></small>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <small><?= date('M d, Y', strtotime($enrollment['enrollment_date'])) ?></small>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-warning text-dark">
+                                                                    <i class="bi bi-clock"></i> Pending
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <?php if(count($pendingEnrollments) > $displayLimit): ?>
+                                            <div class="text-center mt-3">
+                                                <a href="<?= site_url('teacher/enrollments') ?>" class="btn btn-warning">
+                                                    <i class="bi bi-arrow-right-circle"></i> View All <?= count($pendingEnrollments) ?> Requests
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-inbox fs-1 text-muted" style="opacity: 0.3;"></i>
+                                            <p class="text-muted mt-3">No pending enrollment requests</p>
+                                            <small class="text-muted">Students requesting to enroll in your courses will appear here</small>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Overview Section for Teacher -->
+                    <div class="row g-4 mt-2">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header" style="background: #f3f4f6; color: #374151; border-bottom: 1px solid #e5e7eb;">
                                     <h5 class="mb-0"><i class="bi bi-grid-3x3-gap"></i> System Overview</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="row g-3">
                                         <div class="col-md-3">
                                             <a href="javascript:void(0)" class="text-decoration-none">
-                                                <div class="card h-100 border-warning hover-shadow">
+                                                <div class="card h-100 hover-shadow" style="border: 1px solid #e5e7eb;">
                                                     <div class="card-body text-center">
-                                                        <i class="bi bi-plus-circle fs-1 text-warning mb-2"></i>
-                                                        <h6 class="card-title">Create Course</h6>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="javascript:void(0)" class="text-decoration-none">
-                                                <div class="card h-100 border-info hover-shadow">
-                                                    <div class="card-body text-center">
-                                                        <i class="bi bi-people fs-1 text-info mb-2"></i>
+                                                        <i class="bi bi-people fs-1 mb-2" style="color: #6b7280;"></i>
                                                         <h6 class="card-title">My Students</h6>
                                                     </div>
                                                 </div>
@@ -369,7 +785,7 @@
                                             <a href="javascript:void(0)" class="text-decoration-none">
                                                 <div class="card h-100 border-primary hover-shadow">
                                                     <div class="card-body text-center">
-                                                        <i class="bi bi-bar-chart fs-1 text-primary mb-2"></i>
+                                                        <i class="bi bi-bar-chart fs-1 mb-2" style="color: #6b7280;"></i>
                                                         <h6 class="card-title">Grades</h6>
                                                     </div>
                                                 </div>
@@ -433,7 +849,7 @@
 
                     <!-- Enrolled Courses & Available Courses -->
                     <div class="row g-4 mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="card shadow-sm">
                                 <div class="card-header bg-success text-white">
                                     <h5 class="mb-0"><i class="bi bi-book-fill"></i> My Enrolled Courses</h5>
@@ -451,6 +867,15 @@
                                                                 <i class="bi bi-person"></i> <?= esc($course['teacher_name'] ?? 'No teacher assigned') ?>
                                                                 | <i class="bi bi-calendar-check"></i> Enrolled: <?= date('M d, Y', strtotime($course['enrollment_date'])) ?>
                                                             </small>
+                                                            <?php if (!empty($course['schedule_days']) && !empty($course['schedule_start_time'])): ?>
+                                                                <div class="mt-2">
+                                                                    <small class="fw-bold text-dark">
+                                                                        <i class="bi bi-calendar-week"></i> <?= esc($course['schedule_days']) ?>
+                                                                        &nbsp;|&nbsp;
+                                                                        <i class="bi bi-clock"></i> <?= date('g:i A', strtotime($course['schedule_start_time'])) ?> - <?= date('g:i A', strtotime($course['schedule_end_time'])) ?>
+                                                                    </small>
+                                                                </div>
+                                                            <?php endif; ?>
                                                         </div>
                                                         <span class="badge bg-success">Enrolled</span>
                                                     </div>
@@ -466,10 +891,53 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="col-md-6">
+
+                        <div class="col-md-4">
                             <div class="card shadow-sm">
-                                <div class="card-header bg-primary text-white">
+                                <div class="card-header" style="background: #f3f4f6; color: #374151; border-bottom: 1px solid #e5e7eb;">
+                                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Pending Enrollments</h5>
+                                </div>
+                                <div class="card-body" id="pendingEnrollmentsContainer">
+                                    <?php if (!empty($pendingEnrollments)): ?>
+                                        <div class="list-group list-group-flush">
+                                            <?php foreach ($pendingEnrollments as $course): ?>
+                                                <div class="list-group-item pending-course-item" data-course-id="<?= $course['course_id'] ?>">
+                                                    <div class="d-flex w-100 justify-content-between align-items-start">
+                                                        <div>
+                                                            <h6 class="mb-1"><?= esc($course['course_code']) ?> - <?= esc($course['course_name']) ?></h6>
+                                                            <p class="mb-1 small text-muted"><?= esc($course['description']) ?></p>
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-person"></i> <?= esc($course['teacher_name'] ?? 'No teacher assigned') ?>
+                                                                | <i class="bi bi-clock"></i> Requested: <?= date('M d, Y', strtotime($course['enrollment_date'])) ?>
+                                                            </small>
+                                                            <?php if (!empty($course['schedule_days']) && !empty($course['schedule_start_time'])): ?>
+                                                                <div class="mt-2">
+                                                                    <small class="fw-bold text-dark">
+                                                                        <i class="bi bi-calendar-week"></i> <?= esc($course['schedule_days']) ?>
+                                                                        &nbsp;|&nbsp;
+                                                                        <i class="bi bi-clock"></i> <?= date('g:i A', strtotime($course['schedule_start_time'])) ?> - <?= date('g:i A', strtotime($course['schedule_end_time'])) ?>
+                                                                    </small>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <span class="badge" style="background: #E0E7FF; color: #3730A3;">Pending</span>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="text-center py-5" id="noPendingMessage">
+                                            <i class="bi bi-hourglass-split text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-3">No pending enrollment requests</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header" style="background: #f3f4f6; color: #374151; border-bottom: 1px solid #e5e7eb;">
                                     <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Available Courses</h5>
                                 </div>
                                 <div class="card-body" id="availableCoursesContainer">
@@ -485,6 +953,15 @@
                                                                 <i class="bi bi-person"></i> <?= esc($course['teacher_name'] ?? 'No teacher assigned') ?>
                                                                 | <i class="bi bi-award"></i> <?= $course['credits'] ?> Credits
                                                             </small>
+                                                            <?php if (!empty($course['schedule_days']) && !empty($course['schedule_start_time'])): ?>
+                                                                <div class="mt-2">
+                                                                    <small class="fw-bold text-dark">
+                                                                        <i class="bi bi-calendar-week"></i> <?= esc($course['schedule_days']) ?>
+                                                                        &nbsp;|&nbsp;
+                                                                        <i class="bi bi-clock"></i> <?= date('g:i A', strtotime($course['schedule_start_time'])) ?> - <?= date('g:i A', strtotime($course['schedule_end_time'])) ?>
+                                                                    </small>
+                                                                </div>
+                                                            <?php endif; ?>
                                                         </div>
                                                         <button class="btn btn-sm btn-primary enroll-btn ms-2" data-course-id="<?= $course['id'] ?>" data-course-name="<?= esc($course['course_name']) ?>">
                                                             <i class="bi bi-plus-circle"></i> Enroll
@@ -496,7 +973,7 @@
                                     <?php else: ?>
                                         <div class="text-center py-5">
                                             <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-                                            <p class="text-muted mt-3">You're enrolled in all available courses!</p>
+                                            <p class="text-muted mt-3">No more courses available!</p>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -510,7 +987,7 @@
                         <div class="col-md-3">
                             <div class="card overview-card h-100 shadow-sm">
                                 <div class="card-body text-center">
-                                    <i class="bi bi-search fs-1 text-primary mb-3"></i>
+                                    <i class="bi bi-search fs-1 mb-3" style="color: #6b7280;"></i>
                                     <h5 class="card-title">Browse Courses</h5>
                                 </div>
                             </div>
@@ -534,7 +1011,7 @@
                         <div class="col-md-3">
                             <div class="card overview-card h-100 shadow-sm">
                                 <div class="card-body text-center">
-                                    <i class="bi bi-person-circle fs-1 text-info mb-3"></i>
+                                    <i class="bi bi-person-circle fs-1 mb-3" style="color: #6b7280;"></i>
                                     <h5 class="card-title">Profile</h5>
                                 </div>
                             </div>
@@ -579,7 +1056,7 @@
                     success: function(response) {
                         if (response.success) {
                             // Show success message
-                            showAlert('success', response.message);
+                            showAlert('warning', response.message);
                             
                             // Remove from available courses
                             courseItem.fadeOut(400, function() {
@@ -590,42 +1067,38 @@
                                     $('#availableCoursesContainer').html(`
                                         <div class="text-center py-5">
                                             <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-                                            <p class="text-muted mt-3">You're enrolled in all available courses!</p>
+                                            <p class="text-muted mt-3">No more courses available!</p>
                                         </div>
                                     `);
                                 }
                             });
                             
-                            // Add to enrolled courses
-                            const enrolledHTML = `
-                                <div class="list-group-item enrolled-course-item" data-course-id="${courseId}">
+                            // Add to pending enrollments
+                            const pendingHTML = `
+                                <div class="list-group-item pending-course-item" data-course-id="${courseId}">
                                     <div class="d-flex w-100 justify-content-between align-items-start">
                                         <div>
                                             <h6 class="mb-1">${response.course.course_code} - ${response.course.course_name}</h6>
                                             <p class="mb-1 small text-muted">${response.course.description || ''}</p>
                                             <small class="text-muted">
                                                 <i class="bi bi-person"></i> ${response.course.teacher_name || 'No teacher assigned'}
-                                                | <i class="bi bi-calendar-check"></i> Enrolled: Just now
+                                                | <i class="bi bi-clock"></i> Requested: Just now
                                             </small>
                                         </div>
-                                        <span class="badge bg-success">Enrolled</span>
+                                        <span class="badge bg-warning text-dark">Pending</span>
                                     </div>
                                 </div>
                             `;
                             
-                            // Remove "no enrolled" message if exists
-                            $('#noEnrolledMessage').remove();
+                            // Remove "no pending" message if exists
+                            $('#noPendingMessage').remove();
                             
-                            // Add enrolled courses container if doesn't exist
-                            if ($('#enrolledCoursesContainer .list-group').length === 0) {
-                                $('#enrolledCoursesContainer').html('<div class="list-group list-group-flush"></div>');
+                            // Add pending enrollments container if doesn't exist
+                            if ($('#pendingEnrollmentsContainer .list-group').length === 0) {
+                                $('#pendingEnrollmentsContainer').html('<div class="list-group list-group-flush"></div>');
                             }
                             
-                            $('#enrolledCoursesContainer .list-group').prepend(enrolledHTML);
-                            
-                            // Update stats
-                            const currentCount = parseInt($('.stat-card.student-card:first h3').text());
-                            $('.stat-card.student-card:first h3').text(currentCount + 1);
+                            $('#pendingEnrollmentsContainer .list-group').prepend(pendingHTML);
                             
                         } else {
                             showAlert('danger', response.message);
@@ -667,76 +1140,234 @@
             }
         });
         <?php endif; ?>
-    </script>
-</body>
-</html>
-                                </div>
-                                <div class="card-body">
-                                    <p class="text-muted text-center py-4">No pending assignments</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- System Overview Section for Student -->
-                    <div class="row g-4 mt-2">
-                        <div class="col-12">
-                            <div class="card shadow-sm">
-                                <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0"><i class="bi bi-grid-3x3-gap"></i> System Overview</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-3">
-                                            <a href="javascript:void(0)" class="text-decoration-none">
-                                                <div class="card h-100 border-success hover-shadow">
-                                                    <div class="card-body text-center">
-                                                        <i class="bi bi-search fs-1 text-success mb-2"></i>
-                                                        <h6 class="card-title">Browse Courses</h6>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="javascript:void(0)" class="text-decoration-none">
-                                                <div class="card h-100 border-primary hover-shadow">
-                                                    <div class="card-body text-center">
-                                                        <i class="bi bi-clipboard-check fs-1 text-primary mb-2"></i>
-                                                        <h6 class="card-title">Assignments</h6>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="javascript:void(0)" class="text-decoration-none">
-                                                <div class="card h-100 border-warning hover-shadow">
-                                                    <div class="card-body text-center">
-                                                        <i class="bi bi-trophy fs-1 text-warning mb-2"></i>
-                                                        <h6 class="card-title">My Grades</h6>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="javascript:void(0)" class="text-decoration-none">
-                                                <div class="card h-100 border-info hover-shadow">
-                                                    <div class="card-body text-center">
-                                                        <i class="bi bi-person fs-1 text-info mb-2"></i>
-                                                        <h6 class="card-title">Profile</h6>
-                                                    </div>
-                                                </div>
-                                            </a>
+        // AJAX Enrollment for Teachers
+        <?php if($user['role'] === 'teacher'): ?>
+        $(document).ready(function() {
+            // Handle enroll button click
+            $('.enroll-btn-teacher').on('click', function(e) {
+                e.preventDefault();
+                
+                const button = $(this);
+                const courseId = button.data('course-id');
+                const courseCard = button.closest('.card[data-course-id="' + courseId + '"]');
+                
+                // Disable button and show loading
+                button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Enrolling...');
+                
+                // CSRF token
+                const csrfName = '<?= csrf_token() ?>';
+                const csrfHash = '<?= csrf_hash() ?>';
+                
+                // Send AJAX request
+                $.ajax({
+                    url: '<?= site_url('course/enroll') ?>',
+                    type: 'POST',
+                    data: {
+                        course_id: courseId,
+                        [csrfName]: csrfHash
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success message
+                            showAlert('warning', response.message);
+                            
+                            // Remove from available courses
+                            courseCard.fadeOut(400, function() {
+                                $(this).remove();
+                                
+                                // Update count
+                                const remainingCount = $('#teacher-available-courses .card').length;
+                                if (remainingCount === 0) {
+                                    $('#teacher-available-courses').html('<p class="text-muted"><small>No available courses</small></p>');
+                                }
+                            });
+                            
+                            // Add to pending enrollments
+                            const pendingHTML = `
+                                <div class="card mb-2 border-warning">
+                                    <div class="card-body p-2">
+                                        <h6 class="mb-1">${response.course.course_name}</h6>
+                                        <small class="text-muted d-block">${response.course.teacher_name || 'Unknown'}</small>
+                                        <div class="mt-2">
+                                            <span class="badge bg-warning text-dark">Pending</span>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            `;
+                            
+                            // Replace "No pending" message if exists
+                            const pendingContainer = $('#teacher-pending-enrollments');
+                            if (pendingContainer.find('p.text-muted').length > 0) {
+                                pendingContainer.html('');
+                            }
+                            
+                            pendingContainer.append(pendingHTML);
+                            
+                        } else {
+                            showAlert('danger', response.message);
+                            button.prop('disabled', false).html('<i class="bi bi-plus-circle"></i> Enroll');
+                        }
+                    },
+                    error: function(xhr) {
+                        let message = 'An error occurred. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        showAlert('danger', message);
+                        button.prop('disabled', false).html('<i class="bi bi-plus-circle"></i> Enroll');
+                    }
+                });
+            });
+            
+            // Helper function to show alerts
+            function showAlert(type, message) {
+                const alertHTML = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                <?php endif; ?>
+                `;
+                
+                // Insert at top of main content
+                $('main').prepend(alertHTML);
+                
+                // Auto dismiss after 5 seconds
+                setTimeout(function() {
+                    $('.alert').fadeOut(400, function() {
+                        $(this).remove();
+                    });
+                }, 5000);
+                
+                // Scroll to top
+                $('html, body').animate({ scrollTop: 0 }, 400);
+            }
+        });
+        <?php endif; ?>
 
-        </main>
-    </div>
+        // Auto-refresh pending enrollments for students
+        <?php if($user['role'] === 'student'): ?>
+        let lastPendingCount = <?= count($pendingEnrollments) ?>;
+        
+        function checkEnrollmentUpdates() {
+            $.ajax({
+                url: '<?= site_url('course/check-status') ?>',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const currentPendingCount = response.pendingCount;
+                        const approvedCount = response.approvedCount;
+                        
+                        // If pending count decreased or approved count increased, reload page
+                        if (currentPendingCount < lastPendingCount || approvedCount > 0) {
+                            // Show notification before reload
+                            const message = approvedCount > 0 
+                                ? `Good news! ${approvedCount} enrollment${approvedCount > 1 ? 's' : ''} approved. Refreshing...`
+                                : 'Enrollment status updated. Refreshing...';
+                            
+                            const alertHTML = `
+                                <div class="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999; min-width: 300px;">
+                                    <i class="bi bi-check-circle-fill"></i> ${message}
+                                </div>
+                            `;
+                            $('body').prepend(alertHTML);
+                            
+                            // Reload page after 1.5 seconds
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        }
+                        
+                        lastPendingCount = currentPendingCount;
+                    }
+                },
+                error: function() {
+                    // Silent fail - don't disrupt user experience
+                }
+            });
+        }
+        
+        // Check every 5 seconds for updates
+        setInterval(checkEnrollmentUpdates, 5000);
+        <?php endif; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        // Auto-refresh for teacher pending approval requests
+        <?php if($user['role'] === 'teacher'): ?>
+        let lastTeacherPendingCount = <?= isset($pendingCount) ? $pendingCount : 0 ?>;
+        let teacherFirstCheck = true;
+        
+        function checkTeacherPendingUpdates() {
+            $.ajax({
+                url: '<?= site_url('teacher/enrollments/pending') ?>',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const currentCount = response.enrollments.length;
+                        
+                        // Skip reload on first check (initial page load)
+                        if (teacherFirstCheck) {
+                            teacherFirstCheck = false;
+                            lastTeacherPendingCount = currentCount;
+                            return;
+                        }
+                        
+                        // If pending count changed, reload page
+                        if (currentCount !== lastTeacherPendingCount) {
+                            lastTeacherPendingCount = currentCount;
+                            location.reload();
+                        }
+                    }
+                },
+                error: function() {
+                    // Silent fail
+                }
+            });
+        }
+        
+        // Check every 10 seconds for new enrollment requests
+        setInterval(checkTeacherPendingUpdates, 10000);
+        <?php endif; ?>
+
+        // Auto-refresh for admin pending approval requests
+        <?php if($user['role'] === 'admin'): ?>
+        let lastAdminPendingCount = <?= isset($pendingCount) ? $pendingCount : 0 ?>;
+        let adminFirstCheck = true;
+        
+        function checkAdminPendingUpdates() {
+            $.ajax({
+                url: '<?= site_url('admin/enrollments/pending') ?>',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const currentCount = response.enrollments.length;
+                        
+                        // Skip reload on first check (initial page load)
+                        if (adminFirstCheck) {
+                            adminFirstCheck = false;
+                            lastAdminPendingCount = currentCount;
+                            return;
+                        }
+                        
+                        // If pending count changed, reload page
+                        if (currentCount !== lastAdminPendingCount) {
+                            lastAdminPendingCount = currentCount;
+                            location.reload();
+                        }
+                    }
+                },
+                error: function() {
+                    // Silent fail
+                }
+            });
+        }
+        
+        // Check every 10 seconds for new enrollment requests
+        setInterval(checkAdminPendingUpdates, 10000);
+        <?php endif; ?>
+    </script>
 </body>
 </html>

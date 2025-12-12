@@ -34,6 +34,16 @@ $routes->group('profile', ['filter' => 'auth'], function($routes) {
 $routes->group('course', ['filter' => 'auth'], function($routes) {
     $routes->post('enroll', 'Course::enroll');
     $routes->post('unenroll', 'Course::unenroll');
+    $routes->get('check-status', 'Course::checkStatus');
+});
+
+// Teacher enrollment management routes
+$routes->group('teacher', ['filter' => 'auth'], function($routes) {
+    $routes->get('enrollments', 'TeacherEnrollment::index');
+    $routes->get('enrollments/pending', 'TeacherEnrollment::getPendingEnrollments');
+    $routes->post('enrollments/approve', 'TeacherEnrollment::approveEnrollment');
+    $routes->post('enrollments/reject', 'TeacherEnrollment::rejectEnrollment');
+    $routes->get('enrollments/history', 'TeacherEnrollment::history');
 });
 
 // Admin-only routes
@@ -62,6 +72,11 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     // Admin enrollment management routes
     $routes->get('enrollments/dashboard', 'AdminEnrollment::dashboard');
     $routes->get('enrollments', 'AdminEnrollment::index');
+    $routes->get('enrollments/pending-view', 'AdminEnrollment::pending');
+    $routes->get('enrollments/pending', 'AdminEnrollment::getPendingEnrollments');
+    $routes->get('enrollments/history', 'AdminEnrollment::history');
+    $routes->post('enrollments/approve', 'AdminEnrollment::approveEnrollment');
+    $routes->post('enrollments/reject', 'AdminEnrollment::rejectEnrollment');
     $routes->post('enrollments/get-student-enrollments', 'AdminEnrollment::getStudentEnrollments');
     $routes->post('enrollments/enroll-student', 'AdminEnrollment::enrollStudent');
     $routes->post('enrollments/unenroll-student', 'AdminEnrollment::unenrollStudent');

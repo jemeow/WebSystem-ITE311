@@ -25,7 +25,10 @@ class CreateEnrollmentsTable extends Migration
                 'constraint' => 11,
                 'unsigned'   => true,
             ],
-            'enrolled_at DATETIME DEFAULT CURRENT_TIMESTAMP',
+            'enrollment_date' => [
+                'type' => 'DATETIME',
+                'null' => false,
+            ],
         ]);
 
         $this->forge->addKey('id', true);

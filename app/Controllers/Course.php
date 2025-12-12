@@ -33,11 +33,12 @@ class Course extends BaseController
 
         // Security Check 2: Verify CSRF token (CodeIgniter handles this automatically if enabled)
         
-        // Security Check 3: Only students can enroll
-        if (session()->get('role') !== 'student') {
+        // Security Check 3: Only students and teachers can self-enroll
+        $userRole = session()->get('role');
+        if ($userRole !== 'student' && $userRole !== 'teacher') {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Only students can enroll in courses.'
+                'message' => 'Only students and teachers can enroll in courses.'
             ])->setStatusCode(403);
         }
 
@@ -74,6 +75,14 @@ class Course extends BaseController
             ])->setStatusCode(400);
         }
 
+        // Check if teacher is trying to enroll in their own course or any course
+        if ($userRole === 'teacher') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Teachers cannot enroll in courses.'
+            ])->setStatusCode(403);
+        }
+
         // Check if already enrolled
         if ($this->enrollmentModel->isAlreadyEnrolled($userId, $courseId)) {
             return $this->response->setJSON([
@@ -82,11 +91,12 @@ class Course extends BaseController
             ])->setStatusCode(400);
         }
 
-        // Enroll the user
+        // Enroll the user with pending status
         $enrollmentData = [
             'user_id' => $userId,
             'course_id' => $courseId,
-            'enrollment_date' => date('Y-m-d H:i:s')
+            'enrollment_date' => date('Y-m-d H:i:s'),
+            'status' => 'pending'
         ];
 
         if ($this->enrollmentModel->enrollUser($enrollmentData)) {
@@ -95,8 +105,9 @@ class Course extends BaseController
             
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Successfully enrolled in ' . $course['course_name'],
-                'course' => $enrolledCourse
+                'message' => 'Enrollment request submitted! Waiting for admin/teacher approval.',
+                'course' => $enrolledCourse,
+                'status' => 'pending'
             ]);
         } else {
             return $this->response->setJSON([
@@ -147,5 +158,43 @@ class Course extends BaseController
                 'message' => 'Failed to unenroll. Please try again.'
             ])->setStatusCode(500);
         }
+    }
+
+    /**
+     * Check enrollment status for auto-refresh (AJAX endpoint)
+     */
+    public function checkStatus()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Unauthorized.'
+            ])->setStatusCode(401);
+        }
+
+        $userId = session()->get('id');
+        
+        // Get pending enrollments count
+        $pendingEnrollments = $this->enrollmentModel->getPendingEnrollments($userId);
+        $pendingCount = count($pendingEnrollments);
+        
+        // Get approved enrollments count (to detect newly approved)
+        // We'll use session to track previous count
+        $previousApprovedCount = session()->get('last_approved_count') ?? 0;
+        $approvedEnrollments = $this->enrollmentModel->getUserEnrollments($userId);
+        $currentApprovedCount = count($approvedEnrollments);
+        
+        // Calculate newly approved
+        $approvedCount = max(0, $currentApprovedCount - $previousApprovedCount);
+        
+        // Update session
+        session()->set('last_approved_count', $currentApprovedCount);
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'pendingCount' => $pendingCount,
+            'approvedCount' => $approvedCount,
+            'totalEnrolled' => $currentApprovedCount
+        ]);
     }
 }

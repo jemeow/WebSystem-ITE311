@@ -11,7 +11,7 @@ class CourseModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
-    protected $allowedFields = ['course_code', 'course_name', 'description', 'teacher_id', 'credits', 'status'];
+    protected $allowedFields = ['course_code', 'course_name', 'description', 'teacher_id', 'credits', 'status', 'schedule_days', 'schedule_start_time', 'schedule_end_time'];
     
     protected $useTimestamps = true;
     protected $createdField = 'created_at';

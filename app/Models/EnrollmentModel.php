@@ -11,7 +11,7 @@ class EnrollmentModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
-    protected $allowedFields = ['user_id', 'course_id', 'enrollment_date'];
+    protected $allowedFields = ['user_id', 'course_id', 'enrollment_date', 'status'];
     
     protected $useTimestamps = false;
 
@@ -24,7 +24,7 @@ class EnrollmentModel extends Model
     }
 
     /**
-     * Get all courses a user is enrolled in
+     * Get all courses a user is enrolled in (approved only)
      */
     public function getUserEnrollments($userId)
     {
@@ -32,6 +32,7 @@ class EnrollmentModel extends Model
                     ->join('courses', 'courses.id = enrollments.course_id')
                     ->join('users', 'users.id = courses.teacher_id', 'left')
                     ->where('enrollments.user_id', $userId)
+                    ->where('enrollments.status', 'approved')
                     ->where('courses.status', 'active')
                     ->orderBy('enrollments.enrollment_date', 'DESC')
                     ->findAll();
@@ -50,11 +51,57 @@ class EnrollmentModel extends Model
     }
 
     /**
-     * Get enrollment count for a course
+     * Get enrollment count for a course (approved only)
      */
     public function getCourseEnrollmentCount($courseId)
     {
-        return $this->where('course_id', $courseId)->countAllResults();
+        return $this->where('course_id', $courseId)
+                    ->where('status', 'approved')
+                    ->countAllResults();
+    }
+
+    /**
+     * Get pending enrollments for a user
+     */
+    public function getPendingEnrollments($userId)
+    {
+        return $this->select('enrollments.*, courses.course_code, courses.course_name, courses.description, courses.credits, users.name as teacher_name')
+                    ->join('courses', 'courses.id = enrollments.course_id')
+                    ->join('users', 'users.id = courses.teacher_id', 'left')
+                    ->where('enrollments.user_id', $userId)
+                    ->where('enrollments.status', 'pending')
+                    ->where('courses.status', 'active')
+                    ->orderBy('enrollments.enrollment_date', 'DESC')
+                    ->findAll();
+    }
+
+    /**
+     * Get all pending enrollments (for admin)
+     */
+    public function getAllPendingEnrollments()
+    {
+        return $this->select('enrollments.*, users.name as student_name, users.email, courses.course_code, courses.course_name')
+                    ->join('users', 'users.id = enrollments.user_id')
+                    ->join('courses', 'courses.id = enrollments.course_id')
+                    ->where('enrollments.status', 'pending')
+                    ->orderBy('enrollments.enrollment_date', 'DESC')
+                    ->findAll();
+    }
+
+    /**
+     * Approve enrollment
+     */
+    public function approveEnrollment($enrollmentId)
+    {
+        return $this->update($enrollmentId, ['status' => 'approved']);
+    }
+
+    /**
+     * Reject enrollment
+     */
+    public function rejectEnrollment($enrollmentId)
+    {
+        return $this->update($enrollmentId, ['status' => 'rejected']);
     }
 
     /**

@@ -21,10 +21,11 @@
         }
         .header-nav .nav-link {
             color: rgba(255,255,255,0.8);
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 0.25rem;
-            margin: 0 0.2rem;
+            margin: 0 0.1rem;
             transition: all 0.3s;
+            font-size: 0.95rem;
         }
         .header-nav .nav-link:hover,
         .header-nav .nav-link.active {
@@ -104,6 +105,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="<?= site_url('admin/enrollments') ?>">
                             <i class="bi bi-clipboard-check"></i> Manage Enrollments
+                            <?php if(isset($pendingCount) && $pendingCount > 0): ?>
+                                <span class="badge bg-danger rounded-pill"><?= $pendingCount ?></span>
+                            <?php endif; ?>
                         </a>
                     </li>
                 </ul>
@@ -218,6 +222,37 @@
                     </div>
                 </div>
 
+                <!-- Pending Enrollments Alert Card -->
+                <?php if(isset($pendingCount) && $pendingCount > 0): ?>
+                <div class="card shadow-sm border-warning mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center">
+                                    <div class="fs-1 text-warning me-3">
+                                        <i class="bi bi-clock-history"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <span class="badge bg-warning text-dark fs-6"><?= $pendingCount ?></span>
+                                            Pending Enrollment<?= $pendingCount > 1 ? 's' : '' ?> Awaiting Approval
+                                        </h5>
+                                        <p class="text-muted mb-0">
+                                            <?= $pendingCount ?> student<?= $pendingCount > 1 ? 's have' : ' has' ?> requested to enroll in courses and need<?= $pendingCount > 1 ? '' : 's' ?> your approval.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="<?= site_url('admin/enrollments/pending-view') ?>" class="btn btn-warning btn-lg">
+                                    <i class="bi bi-list-check"></i> Review Requests
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Quick Actions -->
                 <div class="row g-4 mb-4">
                     <div class="col-md-12">
@@ -232,7 +267,7 @@
                                             <div class="card quick-action-card shadow-sm border-0 bg-primary text-white">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-people-fill fs-1 mb-2"></i>
-                                                    <h6 class="mb-0">Manage Users</h6>
+                                                    <p class="mb-0">Manage Users</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -242,7 +277,7 @@
                                             <div class="card quick-action-card shadow-sm border-0 bg-success text-white">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-person-plus-fill fs-1 mb-2"></i>
-                                                    <h6 class="mb-0">Add New User</h6>
+                                                    <p class="mb-0">Add New User</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -252,7 +287,7 @@
                                             <div class="card quick-action-card shadow-sm border-0 bg-warning text-white">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-check-circle-fill fs-1 mb-2"></i>
-                                                    <h6 class="mb-0">Active Users</h6>
+                                                    <p class="mb-0">Active Users</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -262,7 +297,61 @@
                                             <div class="card quick-action-card shadow-sm border-0 bg-danger text-white">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-x-circle-fill fs-1 mb-2"></i>
-                                                    <h6 class="mb-0">Inactive Users</h6>
+                                                    <p class="mb-0">Inactive Users</p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enrollment Actions -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="bi bi-journal-check text-info"></i> Enrollment Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <a href="<?= site_url('admin/enrollments/dashboard') ?>" class="text-decoration-none">
+                                            <div class="card quick-action-card shadow-sm border-0 bg-info text-white">
+                                                <div class="card-body text-center">
+                                                    <i class="bi bi-bar-chart-fill fs-1 mb-2"></i>
+                                                    <p class="mb-0">Enrollment Dashboard</p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="<?= site_url('admin/enrollments') ?>" class="text-decoration-none">
+                                            <div class="card quick-action-card shadow-sm border-0 bg-success text-white position-relative">
+                                                <div class="card-body text-center">
+                                                    <i class="bi bi-journal-check fs-1 mb-2"></i>
+                                                    <p class="mb-0">
+                                                        Enrollment Management
+                                                        <?php if(isset($pendingCount) && $pendingCount > 0): ?>
+                                                            <span class="badge bg-danger position-absolute top-0 end-0 m-2"><?= $pendingCount ?></span>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="<?= site_url('admin/courses') ?>" class="text-decoration-none">
+                                            <div class="card quick-action-card shadow-sm border-0 bg-primary text-white">
+                                                <div class="card-body text-center">
+                                                    <i class="bi bi-book-fill fs-1 mb-2"></i>
+                                                    <p class="mb-0">Manage Courses</p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
                                                 </div>
                                             </div>
                                         </a>
@@ -274,7 +363,7 @@
                 </div>
 
                 <!-- System Overview Section -->
-                <div class="row g-4 mt-2">
+                <div class="row g-4 mb-4">
                     <div class="col-12">
                         <div class="card shadow-sm">
                             <div class="card-header bg-primary text-white">
@@ -287,7 +376,7 @@
                                             <div class="card h-100 border-primary hover-shadow">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-book fs-1 text-primary mb-2"></i>
-                                                    <h6 class="card-title">Manage Courses</h6>
+                                                    <p class="mb-0">Manage Courses</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -297,7 +386,7 @@
                                             <div class="card h-100 border-success hover-shadow">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-journal-text fs-1 text-success mb-2"></i>
-                                                    <h6 class="card-title">Content Management</h6>
+                                                    <p class="mb-0">Content Management</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -307,7 +396,7 @@
                                             <div class="card h-100 border-warning hover-shadow">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-gear fs-1 text-warning mb-2"></i>
-                                                    <h6 class="card-title">System Settings</h6>
+                                                    <p class="mb-0">System Settings</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -317,7 +406,7 @@
                                             <div class="card h-100 border-info hover-shadow">
                                                 <div class="card-body text-center">
                                                     <i class="bi bi-bar-chart fs-1 text-info mb-2"></i>
-                                                    <h6 class="card-title">Reports & Analytics</h6>
+                                                    <p class="mb-0">Reports & Analytics</p>
                                                 </div>
                                             </div>
                                         </a>
@@ -329,7 +418,7 @@
                 </div>
 
                 <!-- Recent Activity and User List -->
-                <div class="row g-4 mt-2">
+                <div class="row g-4 mb-4">
                     <!-- Recent Users -->
                     <div class="col-md-8">
                         <div class="card shadow-sm">

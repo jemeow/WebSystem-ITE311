@@ -26,7 +26,9 @@ class UserManagement extends BaseController
         }
 
         $filter = $this->request->getGet('filter');
+        $role = $this->request->getGet('role');
         
+        // Start with base query
         if ($filter === 'active') {
             $data['users'] = $this->userModel->getActiveUsers();
         } elseif ($filter === 'inactive') {
@@ -34,8 +36,16 @@ class UserManagement extends BaseController
         } else {
             $data['users'] = $this->userModel->getAllUsersWithStatus();
         }
+        
+        // Apply role filter if specified
+        if ($role && in_array($role, ['admin', 'teacher', 'student'])) {
+            $data['users'] = array_filter($data['users'], function($user) use ($role) {
+                return $user['role'] === $role;
+            });
+        }
 
         $data['filter'] = $filter;
+        $data['role'] = $role;
         
         return view('admin/user_management', $data);
     }

@@ -277,7 +277,6 @@ class CourseManagement extends BaseController
      */
     public function assignTeacher()
     {
-        // Log for debugging
         log_message('info', 'assignTeacher called');
         log_message('info', 'Role: ' . session()->get('role'));
         
@@ -290,9 +289,16 @@ class CourseManagement extends BaseController
 
         $courseId = $this->request->getPost('course_id');
         $teacherId = $this->request->getPost('teacher_id');
+        $scheduleDays = $this->request->getPost('schedule_days');
+        $startTime = $this->request->getPost('schedule_start_time');
+        $endTime = $this->request->getPost('schedule_end_time');
 
-        log_message('info', 'Course ID: ' . $courseId);
-        log_message('info', 'Teacher ID: ' . $teacherId);
+        log_message('info', '=== ASSIGN TEACHER REQUEST ===' );
+        log_message('info', 'Course ID: ' . var_export($courseId, true));
+        log_message('info', 'Teacher ID: ' . var_export($teacherId, true));
+        log_message('info', 'Schedule Days: ' . var_export($scheduleDays, true));
+        log_message('info', 'Start Time: ' . var_export($startTime, true));
+        log_message('info', 'End Time: ' . var_export($endTime, true));
 
         if (!$courseId) {
             return $this->response->setJSON([
@@ -309,9 +315,15 @@ class CourseManagement extends BaseController
             ]);
         }
 
-        // If teacher_id is empty, remove teacher assignment
+        // If teacher_id is empty, remove teacher assignment and schedule
         if (empty($teacherId)) {
-            if ($this->courseModel->update($courseId, ['teacher_id' => null])) {
+            $updateData = [
+                'teacher_id' => null,
+                'schedule_days' => null,
+                'schedule_start_time' => null,
+                'schedule_end_time' => null
+            ];
+            if ($this->courseModel->update($courseId, $updateData)) {
                 log_message('info', 'Teacher removed successfully');
                 return $this->response->setJSON([
                     'success' => true,
@@ -320,6 +332,14 @@ class CourseManagement extends BaseController
                 ]);
             }
         } else {
+            // Validate schedule when assigning teacher
+            if (!$scheduleDays || !$startTime || !$endTime) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Schedule information is required when assigning a teacher.'
+                ]);
+            }
+
             // Verify teacher exists
             $teacher = $this->userModel->where('id', $teacherId)
                                       ->where('role', 'teacher')
@@ -334,12 +354,49 @@ class CourseManagement extends BaseController
                 ]);
             }
 
-            if ($this->courseModel->update($courseId, ['teacher_id' => $teacherId])) {
-                log_message('info', 'Teacher assigned successfully: ' . $teacher['name']);
+            // Check for schedule conflicts with other courses taught by the same teacher
+            $conflict = $this->checkScheduleConflict($teacherId, $scheduleDays, $startTime, $endTime, $courseId);
+            if ($conflict) {
+                log_message('warning', 'Schedule conflict detected for teacher ID: ' . $teacherId);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Schedule conflict! ' . $teacher['name'] . ' already teaches ' . 
+                                $conflict['course_name'] . ' (' . $conflict['course_code'] . ') on ' . 
+                                $conflict['schedule_days'] . ' at ' . 
+                                date('g:i A', strtotime($conflict['schedule_start_time'])) . ' - ' . 
+                                date('g:i A', strtotime($conflict['schedule_end_time'])) . '.'
+                ]);
+            }
+
+            // Update course with teacher and schedule
+            $updateData = [
+                'teacher_id' => $teacherId,
+                'schedule_days' => $scheduleDays,
+                'schedule_start_time' => $startTime,
+                'schedule_end_time' => $endTime
+            ];
+
+            log_message('info', 'Update data: ' . json_encode($updateData));
+            
+            $updateResult = $this->courseModel->update($courseId, $updateData);
+            log_message('info', 'Update result: ' . ($updateResult ? 'SUCCESS' : 'FAILED'));
+            
+            if ($updateResult) {
+                // Verify the update
+                $verifiedCourse = $this->courseModel->find($courseId);
+                log_message('info', 'Verified schedule_days: ' . var_export($verifiedCourse['schedule_days'], true));
+                log_message('info', 'Verified start_time: ' . var_export($verifiedCourse['schedule_start_time'], true));
+                log_message('info', 'Verified end_time: ' . var_export($verifiedCourse['schedule_end_time'], true));
+                
                 return $this->response->setJSON([
                     'success' => true,
-                    'message' => 'Teacher assigned successfully!',
-                    'teacher_name' => $teacher['name']
+                    'message' => 'Teacher assigned successfully with schedule!',
+                    'teacher_name' => $teacher['name'],
+                    'schedule' => [
+                        'days' => $verifiedCourse['schedule_days'],
+                        'start' => $verifiedCourse['schedule_start_time'],
+                        'end' => $verifiedCourse['schedule_end_time']
+                    ]
                 ]);
             }
         }
@@ -349,5 +406,60 @@ class CourseManagement extends BaseController
             'success' => false,
             'message' => 'Failed to assign teacher.'
         ]);
+    }
+
+    /**
+     * Check for schedule conflicts
+     * 
+     * @param int $teacherId The teacher's ID
+     * @param string $scheduleDays Comma-separated days (e.g., "Mon, Wed, Fri")
+     * @param string $startTime Start time (e.g., "08:00")
+     * @param string $endTime End time (e.g., "10:00")
+     * @param int|null $excludeCourseId Course ID to exclude from conflict check (for updates)
+     * @return array|false Returns conflicting course data or false if no conflict
+     */
+    private function checkScheduleConflict($teacherId, $scheduleDays, $startTime, $endTime, $excludeCourseId = null)
+    {
+        // Get all courses taught by this teacher with schedules
+        $query = $this->courseModel
+            ->where('teacher_id', $teacherId)
+            ->where('schedule_days IS NOT NULL')
+            ->where('schedule_start_time IS NOT NULL')
+            ->where('schedule_end_time IS NOT NULL');
+        
+        // Exclude current course if updating
+        if ($excludeCourseId) {
+            $query->where('id !=', $excludeCourseId);
+        }
+        
+        $teacherCourses = $query->findAll();
+
+        // Convert new schedule days to array
+        $newDays = array_map('trim', explode(',', $scheduleDays));
+
+        foreach ($teacherCourses as $course) {
+            // Convert existing schedule days to array
+            $existingDays = array_map('trim', explode(',', $course['schedule_days']));
+
+            // Check if there's any day overlap
+            $dayOverlap = array_intersect($newDays, $existingDays);
+            
+            if (!empty($dayOverlap)) {
+                // There's a day overlap, now check time overlap
+                $newStart = strtotime($startTime);
+                $newEnd = strtotime($endTime);
+                $existingStart = strtotime($course['schedule_start_time']);
+                $existingEnd = strtotime($course['schedule_end_time']);
+
+                // Check if times overlap
+                // Times overlap if: new start < existing end AND new end > existing start
+                if ($newStart < $existingEnd && $newEnd > $existingStart) {
+                    // Conflict found!
+                    return $course;
+                }
+            }
+        }
+
+        return false;
     }
 }

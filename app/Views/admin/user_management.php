@@ -127,16 +127,42 @@
                 <!-- Filter Buttons -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
-                        <div class="btn-group" role="group">
-                            <a href="<?= site_url('admin/users') ?>" class="btn btn-<?= !isset($filter) || $filter === null ? 'primary' : 'outline-primary' ?>">
-                                <i class="bi bi-people"></i> All Users
-                            </a>
-                            <a href="<?= site_url('admin/users?filter=active') ?>" class="btn btn-<?= isset($filter) && $filter === 'active' ? 'success' : 'outline-success' ?>">
-                                <i class="bi bi-check-circle"></i> Active
-                            </a>
-                            <a href="<?= site_url('admin/users?filter=inactive') ?>" class="btn btn-<?= isset($filter) && $filter === 'inactive' ? 'danger' : 'outline-danger' ?>">
-                                <i class="bi bi-x-circle"></i> Inactive
-                            </a>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Filter by Status</label>
+                                <div class="btn-group w-100" role="group">
+                                    <a href="<?= site_url('admin/users') ?>" class="btn btn-<?= !isset($filter) || $filter === null ? 'primary' : 'outline-primary' ?>">
+                                        <i class="bi bi-people"></i> All
+                                    </a>
+                                    <a href="<?= site_url('admin/users?filter=active') ?>" class="btn btn-<?= isset($filter) && $filter === 'active' ? 'success' : 'outline-success' ?>">
+                                        <i class="bi bi-check-circle"></i> Active
+                                    </a>
+                                    <a href="<?= site_url('admin/users?filter=inactive') ?>" class="btn btn-<?= isset($filter) && $filter === 'inactive' ? 'danger' : 'outline-danger' ?>">
+                                        <i class="bi bi-x-circle"></i> Inactive
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Filter by Role</label>
+                                <div class="btn-group w-100" role="group">
+                                    <a href="<?= site_url('admin/users' . (isset($filter) && in_array($filter, ['active', 'inactive']) ? '?filter=' . $filter : '')) ?>" 
+                                       class="btn btn-<?= !isset($role) || $role === null ? 'primary' : 'outline-primary' ?>">
+                                        <i class="bi bi-people"></i> All
+                                    </a>
+                                    <a href="<?= site_url('admin/users?role=admin' . (isset($filter) && in_array($filter, ['active', 'inactive']) ? '&filter=' . $filter : '')) ?>" 
+                                       class="btn btn-<?= isset($role) && $role === 'admin' ? 'danger' : 'outline-danger' ?>">
+                                        <i class="bi bi-shield-lock"></i> Admin
+                                    </a>
+                                    <a href="<?= site_url('admin/users?role=teacher' . (isset($filter) && in_array($filter, ['active', 'inactive']) ? '&filter=' . $filter : '')) ?>" 
+                                       class="btn btn-<?= isset($role) && $role === 'teacher' ? 'warning' : 'outline-warning' ?>">
+                                        <i class="bi bi-person-badge"></i> Teacher
+                                    </a>
+                                    <a href="<?= site_url('admin/users?role=student' . (isset($filter) && in_array($filter, ['active', 'inactive']) ? '&filter=' . $filter : '')) ?>" 
+                                       class="btn btn-<?= isset($role) && $role === 'student' ? 'success' : 'outline-success' ?>">
+                                        <i class="bi bi-person"></i> Student
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -145,12 +171,20 @@
                 <div class="card shadow-sm">
                     <div class="card-header bg-white">
                         <h5 class="mb-0">
-                            <?php if(isset($filter) && $filter === 'active'): ?>
-                                <i class="bi bi-check-circle text-success"></i> Active Users
+                            <?php 
+                            $roleText = '';
+                            if(isset($role)) {
+                                if($role === 'admin') $roleText = '<i class="bi bi-shield-lock text-danger"></i> Admin ';
+                                elseif($role === 'teacher') $roleText = '<i class="bi bi-person-badge text-warning"></i> Teacher ';
+                                elseif($role === 'student') $roleText = '<i class="bi bi-person text-success"></i> Student ';
+                            }
+                            
+                            if(isset($filter) && $filter === 'active'): ?>
+                                <?= $roleText ?><i class="bi bi-check-circle text-success"></i> Active Users
                             <?php elseif(isset($filter) && $filter === 'inactive'): ?>
-                                <i class="bi bi-x-circle text-danger"></i> Inactive Users
+                                <?= $roleText ?><i class="bi bi-x-circle text-danger"></i> Inactive Users
                             <?php else: ?>
-                                <i class="bi bi-people"></i> All Users
+                                <?= $roleText ?: '<i class="bi bi-people"></i> ' ?>All Users
                             <?php endif; ?>
                         </h5>
                     </div>

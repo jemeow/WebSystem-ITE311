@@ -39,6 +39,10 @@ class Admin extends BaseController
         $data['activeUsers'] = $this->userModel->where('status', 'active')->countAllResults();
         $data['inactiveUsers'] = $this->userModel->where('status', 'inactive')->countAllResults();
         
+        // Get pending enrollment count
+        $enrollmentModel = new \App\Models\EnrollmentModel();
+        $data['pendingCount'] = count($enrollmentModel->getAllPendingEnrollments());
+        
         // Get recent users
         $data['recentUsers'] = $this->userModel->orderBy('created_at', 'DESC')->findAll(10);
         

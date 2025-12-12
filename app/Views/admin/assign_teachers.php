@@ -221,6 +221,23 @@
                                         </div>
                                     </div>
 
+                                    <?php if (!empty($course['schedule_days']) && !empty($course['schedule_start_time'])): ?>
+                                        <div class="mb-3 p-2" style="background: #f3f4f6; border-radius: 4px;">
+                                            <label class="form-label small text-muted mb-1">
+                                                <i class="bi bi-calendar-week"></i> Schedule
+                                            </label>
+                                            <div>
+                                                <small class="fw-bold text-dark">
+                                                    <?= esc($course['schedule_days']) ?>
+                                                </small>
+                                                <br>
+                                                <small class="fw-bold text-dark">
+                                                    <i class="bi bi-clock"></i> <?= date('g:i A', strtotime($course['schedule_start_time'])) ?> - <?= date('g:i A', strtotime($course['schedule_end_time'])) ?>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+
                                     <button class="btn btn-primary btn-sm w-100 assign-teacher-btn" 
                                             data-course-id="<?= $course['id'] ?>"
                                             data-course-name="<?= esc($course['course_name']) ?>"
@@ -267,6 +284,61 @@
                             <i class="bi bi-search search-icon"></i>
                             <input type="text" class="form-control" id="teacherSearchInput" placeholder="Search by name or email...">
                         </div>
+                    </div>
+
+                    <!-- Schedule Information -->
+                    <div class="alert alert-primary">
+                        <h6 class="mb-3"><i class="bi bi-calendar-week"></i> Class Schedule</h6>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="scheduleDays" class="form-label fw-bold">Days of the Week *</label>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Mon" id="dayMon" name="schedule_days">
+                                        <label class="form-check-label" for="dayMon">Monday</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Tue" id="dayTue" name="schedule_days">
+                                        <label class="form-check-label" for="dayTue">Tuesday</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Wed" id="dayWed" name="schedule_days">
+                                        <label class="form-check-label" for="dayWed">Wednesday</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Thu" id="dayThu" name="schedule_days">
+                                        <label class="form-check-label" for="dayThu">Thursday</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Fri" id="dayFri" name="schedule_days">
+                                        <label class="form-check-label" for="dayFri">Friday</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Sat" id="daySat" name="schedule_days">
+                                        <label class="form-check-label" for="daySat">Saturday</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Sun" id="daySun" name="schedule_days">
+                                        <label class="form-check-label" for="daySun">Sunday</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="scheduleStartTime" class="form-label fw-bold">Start Time *</label>
+                                <input type="time" class="form-control" id="scheduleStartTime" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="scheduleEndTime" class="form-label fw-bold">End Time *</label>
+                                <input type="time" class="form-control" id="scheduleEndTime" required>
+                            </div>
+                        </div>
+                        <small class="text-muted">* Required fields when assigning a teacher</small>
+                    </div>
+
+                    <!-- Schedule Conflict Warning -->
+                    <div id="scheduleConflictWarning" class="alert alert-danger" style="display: none;">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Schedule Conflict Detected!</h6>
+                        <p class="mb-0" id="conflictMessage"></p>
                     </div>
 
                     <div class="mb-3">
@@ -409,12 +481,92 @@
                 $(this).find('i.bi-check-circle').show();
                 
                 selectedTeacherId = $(this).data('teacher-id') || null;
-                $('#confirmAssignTeacher').prop('disabled', false);
+                
+                // Check schedule conflicts if teacher selected
+                if (selectedTeacherId) {
+                    checkScheduleConflict();
+                } else {
+                    $('#scheduleConflictWarning').hide();
+                    $('#confirmAssignTeacher').prop('disabled', false);
+                }
+            });
+
+            // Check schedule conflicts
+            function checkScheduleConflict() {
+                const selectedDays = $('input[name="schedule_days"]:checked').map(function() {
+                    return $(this).val();
+                }).get();
+                const startTime = $('#scheduleStartTime').val();
+                const endTime = $('#scheduleEndTime').val();
+
+                // Validate schedule input
+                if (selectedDays.length === 0 || !startTime || !endTime) {
+                    $('#confirmAssignTeacher').prop('disabled', true);
+                    return;
+                }
+
+                // Validate time range
+                if (startTime >= endTime) {
+                    $('#scheduleConflictWarning').show();
+                    $('#conflictMessage').text('End time must be after start time.');
+                    $('#confirmAssignTeacher').prop('disabled', true);
+                    return;
+                }
+
+                // Check for conflicts via AJAX
+                $.ajax({
+                    url: '<?= site_url("/admin/courses/check-schedule-conflict") ?>',
+                    type: 'POST',
+                    data: {
+                        teacher_id: selectedTeacherId,
+                        course_id: currentCourseId,
+                        schedule_days: selectedDays.join(','),
+                        start_time: startTime,
+                        end_time: endTime,
+                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.conflict) {
+                            $('#scheduleConflictWarning').show();
+                            $('#conflictMessage').html(response.message);
+                            $('#confirmAssignTeacher').prop('disabled', true);
+                        } else {
+                            $('#scheduleConflictWarning').hide();
+                            $('#confirmAssignTeacher').prop('disabled', false);
+                        }
+                    },
+                    error: function() {
+                        $('#scheduleConflictWarning').hide();
+                        $('#confirmAssignTeacher').prop('disabled', false);
+                    }
+                });
+            }
+
+            // Trigger conflict check when schedule changes
+            $('input[name="schedule_days"], #scheduleStartTime, #scheduleEndTime').on('change', function() {
+                if (selectedTeacherId) {
+                    checkScheduleConflict();
+                }
             });
 
             // Confirm assignment
             $('#confirmAssignTeacher').on('click', function() {
                 const button = $(this);
+                
+                // Get schedule data
+                const selectedDays = $('input[name="schedule_days"]:checked').map(function() {
+                    return $(this).val();
+                }).get().join(',');
+                const startTime = $('#scheduleStartTime').val();
+                const endTime = $('#scheduleEndTime').val();
+
+                // Validate if teacher is selected
+                if (selectedTeacherId && (!selectedDays || !startTime || !endTime)) {
+                    showAlert('danger', 'Please fill in all schedule fields when assigning a teacher.');
+                    return;
+                }
+
                 button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Assigning...');
 
                 const csrfName = '<?= csrf_token() ?>';
@@ -426,6 +578,9 @@
                     data: {
                         course_id: currentCourseId,
                         teacher_id: selectedTeacherId,
+                        schedule_days: selectedDays,
+                        schedule_start_time: startTime,
+                        schedule_end_time: endTime,
                         [csrfName]: csrfHash
                     },
                     dataType: 'json',

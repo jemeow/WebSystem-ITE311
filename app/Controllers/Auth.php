@@ -128,6 +128,18 @@ class Auth extends Controller
         $role = session()->get('role');
         $userId = session()->get('id');
 
+        // Get pending enrollments count for header
+        $enrollmentModel = new \App\Models\EnrollmentModel();
+        $data['pendingCount'] = 0;
+        
+        if ($role === 'admin') {
+            // Admin sees all pending enrollments
+            $data['pendingCount'] = count($enrollmentModel->getAllPendingEnrollments());
+        } else {
+            // Students/Teachers see their own pending enrollments
+            $data['pendingCount'] = count($enrollmentModel->getPendingEnrollments($userId));
+        }
+
         // Initialize data array
         $data = [
             'user' => [
@@ -142,21 +154,59 @@ class Auth extends Controller
         switch ($role) {
             case 'admin':
                 // Admin sees all users, courses, and statistics
+                $courseModel = new \App\Models\CourseModel();
+                $enrollmentModel = new \App\Models\EnrollmentModel();
                 $data['totalUsers'] = $this->userModel->countAll();
                 $data['totalAdmins'] = $this->userModel->where('role', 'admin')->countAllResults();
                 $data['totalTeachers'] = $this->userModel->where('role', 'teacher')->countAllResults();
                 $data['totalStudents'] = $this->userModel->where('role', 'student')->countAllResults();
+                $data['totalCourses'] = $courseModel->countAll();
+                $data['totalEnrollments'] = $enrollmentModel->where('status', 'approved')->countAllResults();
                 $data['recentUsers'] = $this->userModel->orderBy('created_at', 'DESC')->findAll(5);
                 break;
 
             case 'teacher':
                 // Teacher sees their courses and students
+                $enrollmentModel = new \App\Models\EnrollmentModel();
+                $courseModel = new \App\Models\CourseModel();
+                
+                // Get teacher's assigned courses (courses they teach)
+                $teacherCourses = $courseModel->where('teacher_id', $userId)
+                                              ->where('status', 'active')
+                                              ->findAll();
+                
+                // Get course IDs for teacher's courses
+                $courseIds = array_column($teacherCourses, 'id');
+                
+                // Get pending enrollment requests for teacher's courses
+                $pendingCount = 0;
+                $totalStudents = 0;
+                if (!empty($courseIds)) {
+                    $pendingCount = $enrollmentModel->where('status', 'pending')
+                                                   ->whereIn('course_id', $courseIds)
+                                                   ->countAllResults();
+                    
+                    // Count unique students enrolled in teacher's courses
+                    $enrolledStudents = $enrollmentModel->distinct()
+                                                       ->select('user_id')
+                                                       ->where('status', 'approved')
+                                                       ->whereIn('course_id', $courseIds)
+                                                       ->findAll();
+                    $totalStudents = count($enrolledStudents);
+                }
+                
+                // Teachers should not enroll in courses - they only teach
                 $data['message'] = 'Welcome to your Teacher Dashboard';
                 $data['stats'] = [
-                    'courses' => 0, // TODO: Implement course count
-                    'students' => 0, // TODO: Implement enrolled students count
-                    'assignments' => 0 // TODO: Implement assignments count
+                    'courses' => count($teacherCourses),
+                    'students' => $totalStudents,
+                    'assignments' => 0 // TODO: Implement assignments count when assignment feature is added
                 ];
+                $data['teacherCourses'] = $teacherCourses;
+                $data['pendingCount'] = $pendingCount;
+                $data['enrolledCourses'] = [];
+                $data['pendingEnrollments'] = [];
+                $data['availableCourses'] = [];
                 break;
 
             case 'student':
@@ -164,16 +214,24 @@ class Auth extends Controller
                 $enrollmentModel = new \App\Models\EnrollmentModel();
                 $courseModel = new \App\Models\CourseModel();
                 
-                // Get enrolled courses
+                // Get approved enrolled courses
                 $enrolledCourses = $enrollmentModel->getUserEnrollments($userId);
                 
-                // Get enrolled course IDs
-                $enrolledCourseIds = array_column($enrolledCourses, 'course_id');
+                // Initialize session counter for auto-refresh
+                session()->set('last_approved_count', count($enrolledCourses));
                 
-                // Get available courses (not enrolled yet)
+                // Get pending enrollments
+                $pendingEnrollments = $enrollmentModel->getPendingEnrollments($userId);
+                
+                // Get enrolled and pending course IDs
+                $enrolledCourseIds = array_column($enrolledCourses, 'course_id');
+                $pendingCourseIds = array_column($pendingEnrollments, 'course_id');
+                $unavailableCourseIds = array_merge($enrolledCourseIds, $pendingCourseIds);
+                
+                // Get available courses (not enrolled or pending)
                 $allCourses = $courseModel->getActiveCourses();
-                $availableCourses = array_filter($allCourses, function($course) use ($enrolledCourseIds) {
-                    return !in_array($course['id'], $enrolledCourseIds);
+                $availableCourses = array_filter($allCourses, function($course) use ($unavailableCourseIds) {
+                    return !in_array($course['id'], $unavailableCourseIds);
                 });
                 
                 $data['message'] = 'Welcome to your Student Dashboard';
@@ -183,6 +241,7 @@ class Auth extends Controller
                     'pendingAssignments' => 0 // TODO: Implement pending assignments count
                 ];
                 $data['enrolledCourses'] = $enrolledCourses;
+                $data['pendingEnrollments'] = $pendingEnrollments;
                 $data['availableCourses'] = array_values($availableCourses);
                 break;
 

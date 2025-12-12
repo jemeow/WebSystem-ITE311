@@ -58,6 +58,10 @@
         .hover-shadow:hover {
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .card[style*="cursor: pointer"]:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
         .btn {
             border-radius: 2px;
             padding: 0.5rem 1rem;
@@ -220,6 +224,11 @@
                     </li>
                     <?php endif; ?>
                     <?php if($user['role'] === 'teacher'): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('teacher/courses') ?>">
+                            <i class="bi bi-book"></i> My Courses
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?= site_url('teacher/enrollments') ?>">
                             <i class="bi bi-clipboard-check"></i> Enrollments
@@ -643,11 +652,12 @@
                                     <div class="row g-3">
                                         <?php foreach($teacherCourses as $course): ?>
                                             <div class="col-md-6">
-                                                <div class="card h-100" style="border: 1px solid #e5e7eb;">
+                                                <div class="card h-100" style="border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.3s;" onclick="window.location='<?= site_url('/teacher/course/' . $course['id']) ?>'">
                                                     <div class="card-body">
                                                         <h6 class="card-title">
                                                             <span class="badge bg-warning"><?= esc($course['course_code']) ?></span>
                                                             <?= esc($course['course_name']) ?>
+                                                            <i class="bi bi-arrow-right-circle float-end text-warning"></i>
                                                         </h6>
                                                         <p class="card-text small text-muted mb-2"><?= esc($course['description']) ?></p>
                                                         <small class="text-muted">
@@ -664,6 +674,9 @@
                                                                 </small>
                                                             </div>
                                                         <?php endif; ?>
+                                                        <small class="text-muted mt-3 d-block text-center">
+                                                            <i class="bi bi-hand-index"></i> Click card to view details
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -980,6 +993,96 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Course Materials Section for Students -->
+                    <?php if (!empty($enrolledCourses)): ?>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="bi bi-files"></i> Course Materials</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php 
+                                $materialModel = new \App\Models\MaterialModel();
+                                $materials = $materialModel->getMaterialsForEnrolledCourses(session()->get('id'));
+                                ?>
+                                
+                                <?php if (!empty($materials)): ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th><i class="bi bi-file-earmark"></i> File Name</th>
+                                                    <th><i class="bi bi-book"></i> Course</th>
+                                                    <th><i class="bi bi-calendar"></i> Uploaded</th>
+                                                    <th><i class="bi bi-download"></i> Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($materials as $material): ?>
+                                                    <?php 
+                                                    // Get file extension and determine icon
+                                                    $filePath = $material['file_path'];
+                                                    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                                                    
+                                                    $iconClass = 'bi-file-earmark';
+                                                    $iconColor = 'text-secondary';
+                                                    
+                                                    switch($ext) {
+                                                        case 'pdf':
+                                                            $iconClass = 'bi-file-earmark-pdf';
+                                                            $iconColor = 'text-danger';
+                                                            break;
+                                                        case 'doc':
+                                                        case 'docx':
+                                                            $iconClass = 'bi-file-earmark-word';
+                                                            $iconColor = 'text-primary';
+                                                            break;
+                                                        case 'xls':
+                                                        case 'xlsx':
+                                                            $iconClass = 'bi-file-earmark-spreadsheet';
+                                                            $iconColor = 'text-success';
+                                                            break;
+                                                        case 'ppt':
+                                                        case 'pptx':
+                                                            $iconClass = 'bi-file-earmark-slides';
+                                                            $iconColor = 'text-warning';
+                                                            break;
+                                                        case 'zip':
+                                                        case 'rar':
+                                                            $iconClass = 'bi-file-earmark-zip';
+                                                            $iconColor = 'text-muted';
+                                                            break;
+                                                    }
+                                                    ?>
+                                                    <tr>
+                                                        <td>
+                                                            <i class="bi <?= $iconClass ?> <?= $iconColor ?>"></i>
+                                                            <?= esc($material['file_name']) ?>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-primary"><?= esc($material['course_code']) ?></span>
+                                                            <?= esc($material['course_name']) ?>
+                                                        </td>
+                                                        <td><?= date('M d, Y', strtotime($material['created_at'])) ?></td>
+                                                        <td>
+                                                            <a href="<?= site_url('/materials/download/' . $material['id']) ?>" class="btn btn-sm btn-success">
+                                                                <i class="bi bi-download"></i> Download
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-center py-4">
+                                        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                                        <p class="text-muted mt-3">No materials available yet for your enrolled courses.</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- System Overview Section for Student -->
                     <h4 class="mb-3">System Overview</h4>

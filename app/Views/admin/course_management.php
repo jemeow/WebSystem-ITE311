@@ -235,6 +235,11 @@
                                                     </a>
                                                 </li>
                                                 <li>
+                                                    <a class="dropdown-item" href="<?= site_url('/admin/course/' . $course['id'] . '/upload') ?>">
+                                                        <i class="bi bi-cloud-upload"></i> Upload Materials
+                                                    </a>
+                                                </li>
+                                                <li>
                                                     <a class="dropdown-item toggle-status" href="#" data-id="<?= $course['id'] ?>" data-status="<?= $course['status'] ?>">
                                                         <i class="bi bi-toggle-<?= $course['status'] === 'active' ? 'off' : 'on' ?>"></i> 
                                                         <?= $course['status'] === 'active' ? 'Deactivate' : 'Activate' ?>

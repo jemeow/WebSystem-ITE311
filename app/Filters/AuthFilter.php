@@ -12,6 +12,13 @@ class AuthFilter implements FilterInterface
     {
         // Check if user is logged in
         if (!session()->get('isLoggedIn')) {
+            // For AJAX requests, return JSON error
+            if ($request->isAJAX()) {
+                return service('response')
+                    ->setJSON(['success' => false, 'message' => 'Authentication required'])
+                    ->setStatusCode(401);
+            }
+            
             // Store the intended URL to redirect back after login
             session()->set('redirect_url', current_url());
             
@@ -25,6 +32,13 @@ class AuthFilter implements FilterInterface
             
             // If specific roles are required, check if user has one of them
             if (!in_array($role, $arguments)) {
+                // For AJAX requests, return JSON error
+                if ($request->isAJAX()) {
+                    return service('response')
+                        ->setJSON(['success' => false, 'message' => 'Permission denied'])
+                        ->setStatusCode(403);
+                }
+                
                 // Redirect based on role
                 if ($role === 'admin') {
                     return redirect()->to(site_url('admin/dashboard'))->with('error', 'You do not have permission to access this page.');

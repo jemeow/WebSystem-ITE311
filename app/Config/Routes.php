@@ -37,8 +37,14 @@ $routes->group('course', ['filter' => 'auth'], function($routes) {
     $routes->get('check-status', 'Course::checkStatus');
 });
 
-// Teacher enrollment management routes
+// Teacher routes
 $routes->group('teacher', ['filter' => 'auth'], function($routes) {
+    // Course management
+    $routes->get('courses', 'Teacher::courses');
+    $routes->get('course/(:num)', 'Teacher::viewCourse/$1');
+    $routes->post('course/(:num)/upload', 'Materials::upload/$1');
+    
+    // Enrollment management
     $routes->get('enrollments', 'TeacherEnrollment::index');
     $routes->get('enrollments/pending', 'TeacherEnrollment::getPendingEnrollments');
     $routes->post('enrollments/approve', 'TeacherEnrollment::approveEnrollment');
@@ -78,6 +84,13 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->post('enrollments/approve', 'AdminEnrollment::approveEnrollment');
     $routes->post('enrollments/reject', 'AdminEnrollment::rejectEnrollment');
     $routes->post('enrollments/get-student-enrollments', 'AdminEnrollment::getStudentEnrollments');
+});
+
+// Materials routes - available to authenticated users
+$routes->group('materials', ['filter' => 'auth'], function($routes) {
+    $routes->get('delete/(:num)', 'Materials::delete/$1');
+    $routes->get('download/(:num)', 'Materials::download/$1');
+    $routes->get('course/(:num)', 'Materials::viewCourseMaterials/$1');
     $routes->post('enrollments/enroll-student', 'AdminEnrollment::enrollStudent');
     $routes->post('enrollments/unenroll-student', 'AdminEnrollment::unenrollStudent');
 });

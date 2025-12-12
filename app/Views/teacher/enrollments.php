@@ -179,6 +179,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('teacher/courses') ?>">
+                            <i class="bi bi-book"></i> My Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link active" href="<?= site_url('teacher/enrollments') ?>">
                             <i class="bi bi-clipboard-check"></i> Enrollments
                         </a>

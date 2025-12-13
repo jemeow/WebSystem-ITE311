@@ -134,17 +134,21 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:void(0)">
+                        <?php $role = session()->get('role'); if ($role === 'user') { $role = 'student'; } ?>
+                        <a class="nav-link" href="<?= $role === 'teacher' ? site_url('teacher/courses') : ($role === 'admin' ? site_url('admin/courses') : site_url('student/courses')) ?>">
                             <i class="bi bi-book"></i> My Courses
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="javascript:void(0)">
-                            <i class="bi bi-clipboard-check"></i> Enrollments
-                        </a>
-                    </li>
+                    <?php if ($role === 'admin' || $role === 'teacher'): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="javascript:void(0)">
+                                <i class="bi bi-clipboard-check"></i> Enrollments
+                            </a>
+                        </li>
+                    <?php endif; ?>
                 </ul>
                 <ul class="navbar-nav">
+                    <?php include(APPPATH . 'Views/components/notification_bell.php'); ?>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="<?= site_url('profile/edit') ?>">
                             <i class="bi bi-person-circle"></i> <?= esc(session()->get('name') ?? 'User') ?>
@@ -168,5 +172,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <?php include(APPPATH . 'Views/components/notification_js.php'); ?>
 </body>
 </html>

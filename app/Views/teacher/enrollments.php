@@ -188,8 +188,14 @@
                             <i class="bi bi-clipboard-check"></i> Enrollments
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('teacher/manage-students') ?>">
+                            <i class="bi bi-people"></i> Manage Students
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
+                    <?php include(APPPATH . 'Views/components/notification_bell.php'); ?>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="<?= site_url('profile/edit') ?>">
                             <i class="bi bi-person-circle"></i> <?= esc(session()->get('name')) ?>
@@ -571,5 +577,6 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
     </script>
+    <?php include(APPPATH . 'Views/components/notification_js.php'); ?>
 </body>
 </html>

@@ -20,14 +20,13 @@ class UserModel extends Model
         'role',
         'status',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 
     protected $useTimestamps = true;
     protected $dateFormat = 'datetime';
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
-    protected $deletedField = 'deleted_at';
 
     protected $validationRules = [
         'name' => 'required|min_length[3]|max_length[50]',

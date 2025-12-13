@@ -91,17 +91,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('/admin/enrollments/dashboard') ?>">
-                            <i class="bi bi-clipboard-data"></i> Enrollment Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="<?= site_url('/admin/enrollments') ?>">
                             <i class="bi bi-clipboard-check"></i> Manage Enrollments
                         </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
+                    <?php include(APPPATH . 'Views/components/notification_bell.php'); ?>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="<?= site_url('/profile/edit') ?>">
                             <i class="bi bi-person-circle"></i> <?= esc(session()->get('name')) ?>
@@ -618,5 +614,6 @@
             }
         });
     </script>
+    <?php include(APPPATH . 'Views/components/notification_js.php'); ?>
 </body>
 </html>

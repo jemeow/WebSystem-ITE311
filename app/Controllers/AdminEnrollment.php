@@ -29,29 +29,7 @@ class AdminEnrollment extends BaseController
      */
     public function dashboard()
     {
-        // Check if user is admin
-        if (session()->get('role') !== 'admin') {
-            return redirect()->to('/dashboard')->with('error', 'Access denied. Admin only.');
-        }
-
-        // Get statistics
-        $data['totalEnrollments'] = $this->enrollmentModel->countAllResults();
-        $data['totalStudents'] = $this->userModel->where('role', 'student')->where('status', 'active')->countAllResults();
-        $data['totalCourses'] = $this->courseModel->where('status', 'active')->countAllResults();
-        
-        // Get enrollment trends
-        $data['enrollmentStats'] = $this->enrollmentModel->getEnrollmentStatistics();
-        
-        // Get most popular courses
-        $data['popularCourses'] = $this->enrollmentModel->getPopularCourses(5);
-        
-        // Get recent enrollments
-        $data['recentEnrollments'] = $this->enrollmentModel->getRecentEnrollments(10);
-        
-        // Get courses with low enrollment
-        $data['lowEnrollmentCourses'] = $this->enrollmentModel->getLowEnrollmentCourses(3);
-        
-        return view('admin/enrollment_dashboard', $data);
+        return redirect()->to('/admin/enrollments');
     }
 
     /**
@@ -175,6 +153,46 @@ class AdminEnrollment extends BaseController
         ];
 
         if ($this->enrollmentModel->enrollUser($enrollmentData)) {
+            $notificationModel = new \App\Models\NotificationModel();
+            date_default_timezone_set('Asia/Manila');
+            
+            // Notify student
+            $notificationModel->insert([
+                'user_id' => $studentId,
+                'message' => 'Admin enrolled you in ' . $course['course_name'],
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            
+            // Notify teacher if course has one
+            if (!empty($course['teacher_id'])) {
+                date_default_timezone_set('Asia/Manila');
+                $notificationModel->insert([
+                    'user_id' => $course['teacher_id'],
+                    'message' => 'Admin enrolled ' . $student['name'] . ' in your course ' . $course['course_name'],
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+
+            // Notify other admins
+            $currentAdminId = session()->get('id');
+            $admins = $this->userModel->where('role', 'admin')->where('status', 'active')->findAll();
+            $adminMessage = ($enrollmentStatus === 'approved')
+                ? 'Student enrolled: ' . $student['name'] . ' was enrolled in ' . $course['course_name'] . ' (' . $course['course_code'] . ') by an admin.'
+                : 'Enrollment submitted: ' . $student['name'] . ' enrollment request for ' . $course['course_name'] . ' (' . $course['course_code'] . ') was created by an admin (pending teacher approval).';
+            foreach ($admins as $admin) {
+                if ((int) $admin['id'] === (int) $currentAdminId) {
+                    continue;
+                }
+                $notificationModel->insert([
+                    'user_id' => $admin['id'],
+                    'message' => $adminMessage,
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+            
             $message = !empty($course['teacher_id']) 
                 ? $student['name'] . ' enrollment request submitted for ' . $course['course_name'] . '. Waiting for teacher approval.'
                 : $student['name'] . ' enrolled in ' . $course['course_name'] . ' successfully.';
@@ -202,7 +220,11 @@ class AdminEnrollment extends BaseController
      */
     public function unenrollStudent()
     {
+        log_message('info', '=== UNENROLL STUDENT CALLED ===');
+        log_message('info', 'User role: ' . session()->get('role'));
+        
         if (session()->get('role') !== 'admin') {
+            log_message('error', 'Unauthorized access attempt');
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Unauthorized. Admin access only.'
@@ -212,22 +234,55 @@ class AdminEnrollment extends BaseController
         $studentId = $this->request->getPost('student_id');
         $courseId = $this->request->getPost('course_id');
         
+        log_message('info', 'Student ID: ' . var_export($studentId, true));
+        log_message('info', 'Course ID: ' . var_export($courseId, true));
+        
         if (!$studentId || !is_numeric($studentId) || !$courseId || !is_numeric($courseId)) {
+            log_message('error', 'Invalid parameters');
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Invalid parameters.'
+                'message' => 'Invalid parameters. Student ID: ' . $studentId . ', Course ID: ' . $courseId
             ])->setStatusCode(400);
         }
 
-        if ($this->enrollmentModel->unenrollUser($studentId, $courseId)) {
+        $studentId = (int) $studentId;
+        $courseId = (int) $courseId;
+
+        // Get course details before unenrolling
+        $course = $this->courseModel->find($courseId);
+        if (!$course) {
+            log_message('error', 'Course not found: ' . $courseId);
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course not found.'
+            ])->setStatusCode(404);
+        }
+
+        log_message('info', 'Attempting to unenroll user ' . $studentId . ' from course ' . $courseId);
+        $result = $this->enrollmentModel->unenrollUser($studentId, $courseId);
+        log_message('info', 'Unenroll result: ' . ($result ? 'SUCCESS' : 'FAILED'));
+
+        if ($result) {
+            // Create notification for student
+            $notificationModel = new \App\Models\NotificationModel();
+            date_default_timezone_set('Asia/Manila');
+            $notificationModel->insert([
+                'user_id' => $studentId,
+                'message' => 'Admin unenrolled you from ' . $course['course_name'] . ' (' . $course['course_code'] . ')',
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            log_message('info', 'Unenroll successful');
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Student unenrolled successfully.'
             ]);
         } else {
+            log_message('error', 'Failed to unenroll user');
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Failed to unenroll student.'
+                'message' => 'Failed to unenroll student. The enrollment may not exist.'
             ])->setStatusCode(500);
         }
     }
@@ -313,6 +368,30 @@ class AdminEnrollment extends BaseController
                 'course_code' => $enrollment['course_code'],
             ]);
 
+            // Create notification for student
+            $notificationModel = new \App\Models\NotificationModel();
+            $notificationModel->insert([
+                'user_id' => $enrollment['user_id'],
+                'message' => 'You have been enrolled in ' . $enrollment['course_name'] . ' (' . $enrollment['course_code'] . ')',
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // Notify other admins that a student has been enrolled
+            $currentAdminId = session()->get('id');
+            $admins = $this->userModel->where('role', 'admin')->where('status', 'active')->findAll();
+            foreach ($admins as $admin) {
+                if ((int) $admin['id'] === (int) $currentAdminId) {
+                    continue;
+                }
+                $notificationModel->insert([
+                    'user_id' => $admin['id'],
+                    'message' => 'Student enrolled: ' . $enrollment['student_name'] . ' was enrolled in ' . $enrollment['course_name'] . ' (' . $enrollment['course_code'] . ') by an admin.',
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Enrollment approved successfully.'
@@ -372,11 +451,11 @@ class AdminEnrollment extends BaseController
             'course_code' => $enrollment['course_code'],
         ]);
 
-        // Reject means delete the enrollment request
-        if ($this->enrollmentModel->delete($enrollmentId)) {
+        // Reject means mark the request as rejected (keep record for retrieval)
+        if ($this->enrollmentModel->update($enrollmentId, ['status' => 'rejected'])) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Enrollment rejected and removed.'
+                'message' => 'Enrollment rejected.'
             ]);
         } else {
             return $this->response->setJSON([

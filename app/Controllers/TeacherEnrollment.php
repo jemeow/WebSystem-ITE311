@@ -144,6 +144,26 @@ class TeacherEnrollment extends BaseController
                 'course_code' => $enrollment['course_code'],
             ]);
 
+            // Create notification for student
+            $notificationModel = new \App\Models\NotificationModel();
+            $notificationModel->insert([
+                'user_id' => $enrollment['user_id'],
+                'message' => 'You have been enrolled in ' . $enrollment['course_name'] . ' (' . $enrollment['course_code'] . ')',
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // Notify all admins that a student has been enrolled
+            $admins = $this->userModel->where('role', 'admin')->findAll();
+            foreach ($admins as $admin) {
+                $notificationModel->insert([
+                    'user_id' => $admin['id'],
+                    'message' => 'Student enrolled: ' . $enrollment['student_name'] . ' was enrolled in ' . $enrollment['course_name'] . ' (' . $enrollment['course_code'] . ') by a teacher.',
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Enrollment approved successfully.'
@@ -278,5 +298,256 @@ class TeacherEnrollment extends BaseController
             'history' => $history,
             'statistics' => $statistics
         ]);
+    }
+    
+    /**
+     * Show teacher's page to enroll students in their courses
+     */
+    public function manageStudents()
+    {
+        // Check if user is teacher
+        if (session()->get('role') !== 'teacher') {
+            return redirect()->to('/dashboard')->with('error', 'Access denied. Teacher only.');
+        }
+
+        $teacherId = session()->get('id');
+        
+        // Get teacher's courses
+        $data['courses'] = $this->courseModel->where('teacher_id', $teacherId)
+                                            ->where('status', 'active')
+                                            ->findAll();
+        
+        // Get all active students
+        $data['students'] = $this->userModel->where('role', 'student')
+                                           ->where('status', 'active')
+                                           ->findAll();
+        
+        return view('teacher/manage_students', $data);
+    }
+    
+    /**
+     * Get student enrollments for a teacher's course (AJAX)
+     */
+    public function getStudentEnrollments()
+    {
+        if (session()->get('role') !== 'teacher') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Unauthorized access.'
+            ])->setStatusCode(401);
+        }
+
+        $studentId = $this->request->getPost('student_id');
+        $teacherId = session()->get('id');
+        
+        if (!$studentId || !is_numeric($studentId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid student ID.'
+            ])->setStatusCode(400);
+        }
+        
+        // Get only teacher's courses
+        $teacherCourses = $this->courseModel->where('teacher_id', $teacherId)
+                                           ->where('status', 'active')
+                                           ->findAll();
+        
+        $courseIds = array_column($teacherCourses, 'id');
+        
+        if (empty($courseIds)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'enrollments' => []
+            ]);
+        }
+        
+        // Get student's enrollments in teacher's courses
+        $enrollments = $this->enrollmentModel->whereIn('course_id', $courseIds)
+                                            ->where('user_id', $studentId)
+                                            ->findAll();
+        
+        $enrolledCourseIds = array_map('intval', array_column($enrollments, 'course_id'));
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'enrolled_course_ids' => $enrolledCourseIds
+        ]);
+    }
+    
+    /**
+     * Enroll a student in teacher's course (AJAX)
+     */
+    public function enrollStudent()
+    {
+        if (session()->get('role') !== 'teacher') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Unauthorized access.'
+            ])->setStatusCode(403);
+        }
+
+        $studentId = $this->request->getPost('student_id');
+        $courseId = $this->request->getPost('course_id');
+        $teacherId = session()->get('id');
+        
+        // Validate inputs
+        if (!$studentId || !is_numeric($studentId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid student ID.'
+            ])->setStatusCode(400);
+        }
+        
+        if (!$courseId || !is_numeric($courseId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid course ID.'
+            ])->setStatusCode(400);
+        }
+        
+        // Verify course belongs to teacher
+        $course = $this->courseModel->find($courseId);
+        if (!$course || $course['teacher_id'] != $teacherId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'You can only enroll students in your own courses.'
+            ])->setStatusCode(403);
+        }
+        
+        // Verify student exists
+        $student = $this->userModel->find($studentId);
+        if (!$student || $student['role'] !== 'student') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Student not found.'
+            ])->setStatusCode(404);
+        }
+        
+        // Check if already enrolled
+        if ($this->enrollmentModel->isAlreadyEnrolled($studentId, $courseId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Student is already enrolled in this course.'
+            ])->setStatusCode(400);
+        }
+        
+        // Enroll student with approved status
+        $enrollmentData = [
+            'user_id' => $studentId,
+            'course_id' => $courseId,
+            'enrollment_date' => date('Y-m-d H:i:s'),
+            'status' => 'approved'
+        ];
+        
+        if ($this->enrollmentModel->insert($enrollmentData)) {
+            // Log to history
+            $this->historyModel->logAction([
+                'enrollment_id' => $this->enrollmentModel->getInsertID(),
+                'user_id' => $studentId,
+                'course_id' => $courseId,
+                'action' => 'approved',
+                'admin_id' => $teacherId,
+                'admin_name' => session()->get('name') . ' (Teacher)',
+                'student_name' => $student['name'],
+                'course_name' => $course['course_name'],
+                'course_code' => $course['course_code'],
+            ]);
+            
+            // Create notification for student
+            $notificationModel = new \App\Models\NotificationModel();
+            $notificationModel->insert([
+                'user_id' => $studentId,
+                'message' => 'You have been enrolled in ' . $course['course_name'] . ' (' . $course['course_code'] . ') by your teacher',
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // Notify all admins that a student has been enrolled
+            $admins = $this->userModel->where('role', 'admin')->findAll();
+            foreach ($admins as $admin) {
+                $notificationModel->insert([
+                    'user_id' => $admin['id'],
+                    'message' => 'Student enrolled: ' . $student['name'] . ' was enrolled in ' . $course['course_name'] . ' (' . $course['course_code'] . ') by a teacher.',
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+            
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Student enrolled successfully.'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to enroll student.'
+            ])->setStatusCode(500);
+        }
+    }
+    
+    /**
+     * Unenroll a student from teacher's course (AJAX)
+     */
+    public function unenrollStudent()
+    {
+        if (session()->get('role') !== 'teacher') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Unauthorized access.'
+            ])->setStatusCode(403);
+        }
+
+        $studentId = $this->request->getPost('student_id');
+        $courseId = $this->request->getPost('course_id');
+        $teacherId = session()->get('id');
+        
+        // Validate inputs
+        if (!$studentId || !is_numeric($studentId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid student ID.'
+            ])->setStatusCode(400);
+        }
+        
+        if (!$courseId || !is_numeric($courseId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid course ID.'
+            ])->setStatusCode(400);
+        }
+        
+        // Verify course belongs to teacher
+        $course = $this->courseModel->find($courseId);
+        if (!$course || $course['teacher_id'] != $teacherId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'You can only unenroll students from your own courses.'
+            ])->setStatusCode(403);
+        }
+        
+        // Get student info
+        $student = $this->userModel->find($studentId);
+        
+        // Unenroll student
+        if ($this->enrollmentModel->unenrollUser($studentId, $courseId)) {
+            // Create notification for student
+            $notificationModel = new \App\Models\NotificationModel();
+            $notificationModel->insert([
+                'user_id' => $studentId,
+                'message' => 'You have been unenrolled from ' . $course['course_name'] . ' (' . $course['course_code'] . ')',
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Student unenrolled successfully.'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to unenroll student.'
+            ])->setStatusCode(500);
+        }
     }
 }

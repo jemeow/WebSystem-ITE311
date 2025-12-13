@@ -111,13 +111,31 @@ class CourseManagement extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        $teacherId = $this->request->getPost('teacher_id') ?: null;
+        $scheduleDays = $this->request->getPost('schedule_days') ?: null;
+        $scheduleStartTime = $this->request->getPost('schedule_start_time') ?: null;
+        $scheduleEndTime = $this->request->getPost('schedule_end_time') ?: null;
+
+        if (!empty($teacherId)) {
+            if (empty($scheduleDays) || empty($scheduleStartTime) || empty($scheduleEndTime)) {
+                return redirect()->back()->withInput()->with('error', 'Schedule information is required when assigning a teacher.');
+            }
+        }
+
+        if (!empty($scheduleStartTime) && !empty($scheduleEndTime) && $scheduleStartTime >= $scheduleEndTime) {
+            return redirect()->back()->withInput()->with('error', 'End time must be after start time.');
+        }
+
         $data = [
             'course_code' => $this->request->getPost('course_code'),
             'course_name' => $this->request->getPost('course_name'),
             'description' => $this->request->getPost('description'),
-            'teacher_id' => $this->request->getPost('teacher_id') ?: null,
+            'teacher_id' => $teacherId,
             'credits' => $this->request->getPost('credits'),
-            'status' => $this->request->getPost('status')
+            'status' => $this->request->getPost('status'),
+            'schedule_days' => $scheduleDays,
+            'schedule_start_time' => $scheduleStartTime,
+            'schedule_end_time' => $scheduleEndTime
         ];
 
         if ($this->courseModel->insert($data)) {
@@ -171,20 +189,45 @@ class CourseManagement extends BaseController
             'description' => 'permit_empty|max_length[1000]',
             'teacher_id' => 'permit_empty|numeric',
             'credits' => 'required|integer|greater_than[0]|less_than_equal_to[10]',
-            'status' => 'required|in_list[active,inactive]'
+            'status' => 'required|in_list[active,inactive]',
+            'schedule_days' => 'permit_empty|max_length[255]',
+            'schedule_start_time' => 'permit_empty',
+            'schedule_end_time' => 'permit_empty'
         ];
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        $teacherId = $this->request->getPost('teacher_id') ?: null;
+        $scheduleDays = $this->request->getPost('schedule_days') ?: null;
+        $scheduleStartTime = $this->request->getPost('schedule_start_time') ?: null;
+        $scheduleEndTime = $this->request->getPost('schedule_end_time') ?: null;
+
+        if (!empty($teacherId)) {
+            if (empty($scheduleDays) || empty($scheduleStartTime) || empty($scheduleEndTime)) {
+                return redirect()->back()->withInput()->with('error', 'Schedule information is required when assigning a teacher.');
+            }
+        } else {
+            $scheduleDays = null;
+            $scheduleStartTime = null;
+            $scheduleEndTime = null;
+        }
+
+        if (!empty($scheduleStartTime) && !empty($scheduleEndTime) && $scheduleStartTime >= $scheduleEndTime) {
+            return redirect()->back()->withInput()->with('error', 'End time must be after start time.');
+        }
+
         $data = [
             'course_code' => $this->request->getPost('course_code'),
             'course_name' => $this->request->getPost('course_name'),
             'description' => $this->request->getPost('description'),
-            'teacher_id' => $this->request->getPost('teacher_id') ?: null,
+            'teacher_id' => $teacherId,
             'credits' => $this->request->getPost('credits'),
-            'status' => $this->request->getPost('status')
+            'status' => $this->request->getPost('status'),
+            'schedule_days' => $scheduleDays,
+            'schedule_start_time' => $scheduleStartTime,
+            'schedule_end_time' => $scheduleEndTime
         ];
 
         if ($this->courseModel->update($id, $data)) {
@@ -382,6 +425,15 @@ class CourseManagement extends BaseController
             log_message('info', 'Update result: ' . ($updateResult ? 'SUCCESS' : 'FAILED'));
             
             if ($updateResult) {
+                // Notify teacher about course assignment
+                $notificationModel = new \App\Models\NotificationModel();
+                $notificationModel->insert([
+                    'user_id' => $teacherId,
+                    'message' => 'You have been assigned to teach ' . $course['course_name'] . ' (' . $course['course_code'] . ')',
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+                
                 // Verify the update
                 $verifiedCourse = $this->courseModel->find($courseId);
                 log_message('info', 'Verified schedule_days: ' . var_export($verifiedCourse['schedule_days'], true));

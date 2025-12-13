@@ -57,11 +57,7 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <span class="nav-link text-white">
-                            <i class="bi bi-person-circle"></i> <?= esc(session()->get('name')) ?>
-                        </span>
-                    </li>
+                    <?php include(APPPATH . 'Views/components/notification_bell.php'); ?>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="<?= site_url('profile/edit') ?>">
                             <i class="bi bi-person-circle"></i> <?= esc(session()->get('name')) ?>
@@ -235,5 +231,6 @@
             }
         });
     </script>
+    <?php include(APPPATH . 'Views/components/notification_js.php'); ?>
 </body>
 </html>

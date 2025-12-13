@@ -28,7 +28,7 @@ class EnrollmentModel extends Model
      */
     public function getUserEnrollments($userId)
     {
-        return $this->select('enrollments.*, courses.course_code, courses.course_name, courses.description, courses.credits, users.name as teacher_name')
+        return $this->select('enrollments.*, courses.course_code, courses.course_name, courses.description, courses.credits, courses.teacher_id, courses.schedule_days, courses.schedule_start_time, courses.schedule_end_time, users.name as teacher_name')
                     ->join('courses', 'courses.id = enrollments.course_id')
                     ->join('users', 'users.id = courses.teacher_id', 'left')
                     ->where('enrollments.user_id', $userId)
@@ -65,7 +65,7 @@ class EnrollmentModel extends Model
      */
     public function getPendingEnrollments($userId)
     {
-        return $this->select('enrollments.*, courses.course_code, courses.course_name, courses.description, courses.credits, users.name as teacher_name')
+        return $this->select('enrollments.*, courses.course_code, courses.course_name, courses.description, courses.credits, courses.teacher_id, courses.schedule_days, courses.schedule_start_time, courses.schedule_end_time, users.name as teacher_name')
                     ->join('courses', 'courses.id = enrollments.course_id')
                     ->join('users', 'users.id = courses.teacher_id', 'left')
                     ->where('enrollments.user_id', $userId)
@@ -118,13 +118,31 @@ class EnrollmentModel extends Model
     }
 
     /**
+     * Get all enrollments for a course with student details (all statuses)
+     */
+    public function getEnrollmentsByCourse($courseId)
+    {
+        return $this->select('enrollments.*, users.name as student_name, users.email as student_email')
+                    ->join('users', 'users.id = enrollments.user_id')
+                    ->where('enrollments.course_id', $courseId)
+                    ->orderBy('enrollments.enrollment_date', 'DESC')
+                    ->findAll();
+    }
+
+    /**
      * Unenroll a user from a course
      */
     public function unenrollUser($userId, $courseId)
     {
-        return $this->where('user_id', $userId)
-                    ->where('course_id', $courseId)
-                    ->delete();
+        $enrollment = $this->where('user_id', $userId)
+                          ->where('course_id', $courseId)
+                          ->first();
+
+        if (!$enrollment) {
+            return false;
+        }
+
+        return $this->delete($enrollment['id']);
     }
 
     /**

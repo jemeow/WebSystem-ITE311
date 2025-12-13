@@ -148,6 +148,24 @@ class Materials extends BaseController
                 return $this->response->setJSON(['success' => false, 'message' => 'Failed to save material to database']);
             }
 
+            // Notify all enrolled students
+            $enrollmentModel = new \App\Models\EnrollmentModel();
+            $enrolledStudents = $enrollmentModel->where('course_id', $courseId)
+                                               ->where('status', 'approved')
+                                               ->findAll();
+            
+            if (!empty($enrolledStudents)) {
+                $notificationModel = new \App\Models\NotificationModel();
+                foreach ($enrolledStudents as $enrollment) {
+                    $notificationModel->insert([
+                        'user_id' => $enrollment['user_id'],
+                        'message' => 'New material uploaded in ' . $course['course_name'] . ': ' . $file->getClientName(),
+                        'is_read' => 0,
+                        'created_at' => date('Y-m-d H:i:s')
+                    ]);
+                }
+            }
+
             log_message('info', 'Upload successful!');
             return $this->response->setJSON(['success' => true, 'message' => 'Material uploaded successfully!']);
             
@@ -180,12 +198,6 @@ class Materials extends BaseController
             return redirect()->back()->with('error', 'You can only delete materials from your own courses.');
         }
 
-        // Delete file from filesystem
-        $filePath = WRITEPATH . $material['file_path'];
-        if (file_exists($filePath)) {
-            unlink($filePath);
-        }
-
         // Delete from database
         if ($this->materialModel->delete($materialId)) {
             return redirect()->back()->with('success', 'Material deleted successfully!');
@@ -213,6 +225,11 @@ class Materials extends BaseController
 
         $userId = session()->get('id');
         $userRole = session()->get('role');
+
+        if ($userRole === 'user') {
+            $userRole = 'student';
+            session()->set('role', $userRole);
+        }
 
         // Admin and teachers can download any material
         // Students can only download if enrolled in the course
@@ -246,6 +263,11 @@ class Materials extends BaseController
         $userId = session()->get('id');
         $userRole = session()->get('role');
 
+        if ($userRole === 'user') {
+            $userRole = 'student';
+            session()->set('role', $userRole);
+        }
+
         // Get course details
         $course = $this->courseModel->find($courseId);
         if (!$course) {
@@ -254,7 +276,13 @@ class Materials extends BaseController
 
         // Check if student is enrolled
         if ($userRole === 'student') {
-            if (!$this->enrollmentModel->isAlreadyEnrolled($userId, $courseId)) {
+            $approvedEnrollment = $this->enrollmentModel
+                ->where('user_id', $userId)
+                ->where('course_id', $courseId)
+                ->where('status', 'approved')
+                ->first();
+
+            if (!$approvedEnrollment) {
                 return redirect()->back()->with('error', 'You must be enrolled in this course to view materials.');
             }
         }

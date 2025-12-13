@@ -101,17 +101,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('/admin/enrollments/dashboard') ?>">
-                            <i class="bi bi-clipboard-data"></i> Enrollment Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="<?= site_url('/admin/enrollments') ?>">
                             <i class="bi bi-clipboard-check"></i> Manage Enrollments
                         </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
+                    <?php include(APPPATH . 'Views/components/notification_bell.php'); ?>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="<?= site_url('/profile/edit') ?>">
                             <i class="bi bi-person-circle"></i> <?= esc(session()->get('name')) ?>
@@ -219,6 +215,11 @@
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li>
+                                                    <a class="dropdown-item" href="<?= site_url('admin/course/' . $course['id']) ?>">
+                                                        <i class="bi bi-eye"></i> View Details
+                                                    </a>
+                                                </li>
+                                                <li>
                                                     <a class="dropdown-item" href="<?= site_url('/admin/courses/edit/' . $course['id']) ?>">
                                                         <i class="bi bi-pencil"></i> Edit
                                                     </a>
@@ -235,7 +236,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a class="dropdown-item" href="<?= site_url('/admin/course/' . $course['id'] . '/upload') ?>">
+                                                    <a class="dropdown-item" href="<?= site_url('/admin/course/' . $course['id']) ?>">
                                                         <i class="bi bi-cloud-upload"></i> Upload Materials
                                                     </a>
                                                 </li>
@@ -706,5 +707,6 @@
             }
         });
     </script>
+    <?php include(APPPATH . 'Views/components/notification_js.php'); ?>
 </body>
 </html>

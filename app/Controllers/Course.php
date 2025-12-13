@@ -18,6 +18,19 @@ class Course extends BaseController
         helper(['url', 'form']);
     }
 
+    public function index()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $courses = $this->courseModel->getActiveCourses();
+
+        return view('courses/index', [
+            'courses' => $courses,
+        ]);
+    }
+
     /**
      * Enroll a student in a course (AJAX endpoint)
      */
@@ -102,6 +115,38 @@ class Course extends BaseController
         if ($this->enrollmentModel->enrollUser($enrollmentData)) {
             // Get the updated course details with teacher info
             $enrolledCourse = $this->courseModel->getCourseWithTeacher($courseId);
+            
+            // Create notification for student
+            $notificationModel = new \App\Models\NotificationModel();
+            $notificationModel->insert([
+                'user_id' => $userId,
+                'message' => 'You have submitted an enrollment request for ' . $course['course_name'] . '. Waiting for approval.',
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            
+            // Notify the teacher of this course
+            if (!empty($course['teacher_id'])) {
+                $userModel = new \App\Models\UserModel();
+                $student = $userModel->find($userId);
+                $notificationModel->insert([
+                    'user_id' => $course['teacher_id'],
+                    'message' => 'New enrollment request from ' . $student['name'] . ' for ' . $course['course_name'],
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+            
+            // Notify all admins
+            $admins = $userModel->where('role', 'admin')->findAll();
+            foreach ($admins as $admin) {
+                $notificationModel->insert([
+                    'user_id' => $admin['id'],
+                    'message' => 'New enrollment request from ' . $student['name'] . ' for ' . $course['course_name'],
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
             
             return $this->response->setJSON([
                 'success' => true,
@@ -195,6 +240,50 @@ class Course extends BaseController
             'pendingCount' => $pendingCount,
             'approvedCount' => $approvedCount,
             'totalEnrolled' => $currentApprovedCount
+        ]);
+    }
+
+    public function search()
+    {
+        if (!session()->get('isLoggedIn')) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Unauthorized.'
+                ])->setStatusCode(401);
+            }
+
+            return redirect()->to('/login');
+        }
+
+        $searchTerm = trim((string) ($this->request->getGetPost('search_term') ?? $this->request->getGetPost('q') ?? ''));
+
+        $builder = $this->courseModel->builder();
+        $builder->select('courses.*, users.name as teacher_name');
+        $builder->join('users', 'users.id = courses.teacher_id', 'left');
+
+        if ($searchTerm !== '') {
+            $builder
+                ->groupStart()
+                ->like('courses.course_name', $searchTerm)
+                ->orLike('courses.course_code', $searchTerm)
+                ->orLike('courses.description', $searchTerm)
+                ->groupEnd();
+        }
+
+        if ($builder->db->fieldExists('status', 'courses')) {
+            $builder->where('courses.status', 'active');
+        }
+
+        $courses = $builder->get()->getResultArray();
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON($courses);
+        }
+
+        return view('courses/search_results', [
+            'courses' => $courses,
+            'searchTerm' => $searchTerm,
         ]);
     }
 }

@@ -209,7 +209,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('admin/enrollments/dashboard') ?>">
+                        <a class="nav-link" href="<?= site_url('admin/enrollments') ?>">
                             <i class="bi bi-journals"></i> Enrollments
                         </a>
                     </li>
@@ -220,6 +220,7 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav">
+                    <?php include(APPPATH . 'Views/components/notification_bell.php'); ?>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="<?= site_url('profile/edit') ?>">
                             <i class="bi bi-person-circle"></i> <?= esc(session()->get('name')) ?>
@@ -702,5 +703,6 @@
             }, 10000);
         });
     </script>
+    <?php include(APPPATH . 'Views/components/notification_js.php'); ?>
 </body>
 </html>

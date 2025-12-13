@@ -48,15 +48,28 @@ class Auth extends Controller
         $password = $this->request->getPost('password');
 
         // Verify user credentials
-        $user = $this->userModel->verifyCredentials($email, $password);
+        try {
+            $user = $this->userModel->verifyCredentials($email, $password);
+        } catch (\Throwable $e) {
+            log_message('critical', 'Login failed due to database error: {message}', ['message' => $e->getMessage()]);
+            return redirect()
+                ->to(site_url('login'))
+                ->withInput()
+                ->with('error', 'Database connection error. Please start MySQL (XAMPP) or fix the database port/config.');
+        }
 
         if ($user) {
+            $role = $user['role'];
+            if ($role === 'user') {
+                $role = 'student';
+            }
+
             // Set session data
             $sessionData = [
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'email' => $user['email'],
-                'role' => $user['role'],
+                'role' => $role,
                 'isLoggedIn' => true,
                 'authenticated' => true
             ];
@@ -64,7 +77,7 @@ class Auth extends Controller
             session()->set($sessionData);
 
             // Redirect based on role
-            if ($user['role'] === 'admin') {
+            if ($role === 'admin') {
                 return redirect()->to(site_url('admin/dashboard'))->with('success', 'Welcome back, ' . $user['name'] . '!');
             }
             
@@ -105,6 +118,19 @@ class Auth extends Controller
         ];
 
         if ($this->userModel->insert($userData)) {
+            // Notify all admins about new student registration
+            $notificationModel = new \App\Models\NotificationModel();
+            $admins = $this->userModel->where('role', 'admin')->findAll();
+            
+            foreach ($admins as $admin) {
+                $notificationModel->insert([
+                    'user_id' => $admin['id'],
+                    'message' => 'New student registered: ' . $userData['name'] . ' (' . $userData['email'] . ')',
+                    'is_read' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+            
             return redirect()->to(site_url('login'))->with('success', 'Registration successful! Please login with your credentials.');
         }
 
@@ -128,20 +154,26 @@ class Auth extends Controller
         $role = session()->get('role');
         $userId = session()->get('id');
 
+        if ($role === 'user') {
+            $role = 'student';
+            session()->set('role', $role);
+        }
+
         // Get pending enrollments count for header
         $enrollmentModel = new \App\Models\EnrollmentModel();
-        $data['pendingCount'] = 0;
+        $pendingCount = 0;
         
         if ($role === 'admin') {
             // Admin sees all pending enrollments
-            $data['pendingCount'] = count($enrollmentModel->getAllPendingEnrollments());
+            $pendingCount = count($enrollmentModel->getAllPendingEnrollments());
         } else {
             // Students/Teachers see their own pending enrollments
-            $data['pendingCount'] = count($enrollmentModel->getPendingEnrollments($userId));
+            $pendingCount = count($enrollmentModel->getPendingEnrollments($userId));
         }
 
         // Initialize data array
         $data = [
+            'pendingCount' => $pendingCount,
             'user' => [
                 'id' => $userId,
                 'name' => session()->get('name'),

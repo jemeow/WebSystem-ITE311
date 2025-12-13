@@ -48,4 +48,45 @@ class Admin extends BaseController
         
         return view('admin/dashboard', $data);
     }
+
+    /**
+     * View Course Details (Admin)
+     */
+    public function viewCourse($courseId)
+    {
+        // Check if user is admin
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to(site_url('dashboard'))->with('error', 'Access denied. Admin only.');
+        }
+
+        $courseModel = new \App\Models\CourseModel();
+        $enrollmentModel = new \App\Models\EnrollmentModel();
+        $materialModel = new \App\Models\MaterialModel();
+
+        // Get course details
+        $course = $courseModel->getCourseWithTeacher($courseId);
+        if (!$course) {
+            return redirect()->to(site_url('admin/courses'))->with('error', 'Course not found.');
+        }
+
+        // Get enrollments for this course
+        $enrollments = $enrollmentModel->getEnrollmentsByCourse($courseId);
+
+        // Get materials for this course
+        $materials = $materialModel->getMaterialsByCourse($courseId);
+
+        // Get statistics
+        $totalEnrolled = count(array_filter($enrollments, function($e) { return $e['status'] === 'approved'; }));
+        $pendingEnrollments = count(array_filter($enrollments, function($e) { return $e['status'] === 'pending'; }));
+
+        $data = [
+            'course' => $course,
+            'enrollments' => $enrollments,
+            'materials' => $materials,
+            'totalEnrolled' => $totalEnrolled,
+            'pendingEnrollments' => $pendingEnrollments
+        ];
+
+        return view('admin/course_detail', $data);
+    }
 }

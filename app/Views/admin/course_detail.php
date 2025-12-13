@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($course['course_code']) ?> - Course Details</title>
+    <title><?= esc($course['course_code']) ?> - Course Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -149,6 +149,10 @@
             background: #D1FAE5 !important;
             color: #065F46;
         }
+        .badge.bg-danger {
+            background: #FEE2E2 !important;
+            color: #991B1B;
+        }
         .badge.bg-secondary {
             background: #E5E7EB !important;
             color: #374151;
@@ -162,7 +166,7 @@
     <!-- Header Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark header-nav">
         <div class="container-fluid">
-            <a class="navbar-brand" href="<?= site_url('/dashboard') ?>">
+            <a class="navbar-brand" href="<?= site_url('dashboard') ?>">
                 <i class="bi bi-mortarboard-fill"></i> ITE311-ZURITA
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -176,18 +180,18 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="<?= site_url('teacher/courses') ?>">
-                            <i class="bi bi-book"></i> My Courses
+                        <a class="nav-link" href="<?= site_url('admin/users') ?>">
+                            <i class="bi bi-people"></i> Users
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('teacher/enrollments') ?>">
-                            <i class="bi bi-clipboard-check"></i> Enrollments
+                        <a class="nav-link active" href="<?= site_url('admin/courses') ?>">
+                            <i class="bi bi-book"></i> Courses
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('teacher/manage-students') ?>">
-                            <i class="bi bi-people"></i> Manage Students
+                        <a class="nav-link" href="<?= site_url('admin/enrollments') ?>">
+                            <i class="bi bi-journals"></i> Enrollments
                         </a>
                     </li>
                 </ul>
@@ -213,6 +217,11 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-8">
+                            <div class="mb-2">
+                                <a href="<?= site_url('admin/courses') ?>" class="btn btn-sm btn-outline-secondary mb-2">
+                                    <i class="bi bi-arrow-left"></i> Back to Courses
+                                </a>
+                            </div>
                             <h2 class="mb-2">
                                 <span class="badge bg-warning text-dark"><?= esc($course['course_code']) ?></span>
                                 <?= esc($course['course_name']) ?>
@@ -229,8 +238,15 @@
                                     <small class="text-muted">
                                         <i class="bi bi-calendar-week"></i> <?= esc($course['schedule_days']) ?>
                                     </small>
+                                    <?php if (!empty($course['schedule_start_time']) && !empty($course['schedule_end_time'])): ?>
                                     <small class="text-muted">
                                         <i class="bi bi-clock"></i> <?= date('g:i A', strtotime($course['schedule_start_time'])) ?> - <?= date('g:i A', strtotime($course['schedule_end_time'])) ?>
+                                    </small>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                                <?php if (!empty($course['teacher_name'])): ?>
+                                    <small class="text-muted">
+                                        <i class="bi bi-person-badge"></i> Instructor: <?= esc($course['teacher_name']) ?>
                                     </small>
                                 <?php endif; ?>
                             </div>
@@ -245,7 +261,7 @@
                     <div class="card stat-card shadow-sm">
                         <div class="card-body text-center">
                             <i class="bi bi-people fs-1 text-primary"></i>
-                            <h3 class="mt-2"><?= count($enrolledStudents) ?></h3>
+                            <h3 class="mt-2"><?= $totalEnrolled ?></h3>
                             <p class="text-muted mb-0">Enrolled Students</p>
                         </div>
                     </div>
@@ -258,42 +274,6 @@
                             <p class="text-muted mb-0">Course Materials</p>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Enrolled Students -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Enrolled Students (<?= count($enrolledStudents) ?>)</h5>
-                </div>
-                <div class="card-body">
-                    <?php if(empty($enrolledStudents)): ?>
-                        <div class="text-center py-5">
-                            <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i>
-                            <h5 class="mt-3 text-muted">No students enrolled yet</h5>
-                        </div>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Enrollment Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach($enrolledStudents as $student): ?>
-                                        <tr>
-                                            <td><i class="bi bi-person-circle text-success"></i> <?= esc($student['name']) ?></td>
-                                            <td><?= esc($student['email']) ?></td>
-                                            <td><?= date('M d, Y', strtotime($student['enrollment_date'])) ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
 
@@ -414,7 +394,7 @@
                         });
                         
                         // Send request
-                        xhr.open('POST', '<?= base_url("teacher/course/" . $course["id"] . "/upload") ?>');
+                        xhr.open('POST', '<?= base_url("admin/course/" . $course["id"]) ?>');
                         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                         xhr.send(formData);
                     });
@@ -423,7 +403,7 @@
             </div>
 
             <!-- Course Materials -->
-            <div class="card shadow-sm">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0"><i class="bi bi-files"></i> Course Materials (<?= count($materials) ?>)</h5>
                 </div>
@@ -445,18 +425,53 @@
                                 </thead>
                                 <tbody>
                                     <?php foreach($materials as $material): ?>
+                                        <?php 
+                                        // Get file extension and determine icon
+                                        $filePath = $material['file_path'];
+                                        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                                        
+                                        $iconClass = 'bi-file-earmark';
+                                        $iconColor = 'text-secondary';
+                                        
+                                        switch($ext) {
+                                            case 'pdf':
+                                                $iconClass = 'bi-file-earmark-pdf';
+                                                $iconColor = 'text-danger';
+                                                break;
+                                            case 'doc':
+                                            case 'docx':
+                                                $iconClass = 'bi-file-earmark-word';
+                                                $iconColor = 'text-primary';
+                                                break;
+                                            case 'xls':
+                                            case 'xlsx':
+                                                $iconClass = 'bi-file-earmark-spreadsheet';
+                                                $iconColor = 'text-success';
+                                                break;
+                                            case 'ppt':
+                                            case 'pptx':
+                                                $iconClass = 'bi-file-earmark-slides';
+                                                $iconColor = 'text-warning';
+                                                break;
+                                            case 'zip':
+                                            case 'rar':
+                                                $iconClass = 'bi-file-earmark-zip';
+                                                $iconColor = 'text-muted';
+                                                break;
+                                        }
+                                        ?>
                                         <tr>
                                             <td>
-                                                <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                                <i class="bi <?= $iconClass ?> <?= $iconColor ?>"></i>
                                                 <?= esc($material['file_name']) ?>
                                             </td>
                                             <td><?= date('M d, Y g:i A', strtotime($material['created_at'])) ?></td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="<?= site_url('/materials/download/' . $material['id']) ?>" class="btn btn-sm btn-success">
+                                                    <a href="<?= site_url('materials/download/' . $material['id']) ?>" class="btn btn-sm btn-success">
                                                         <i class="bi bi-download"></i> Download
                                                     </a>
-                                                    <a href="<?= site_url('/materials/delete/' . $material['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this material?')">
+                                                    <a href="<?= site_url('materials/delete/' . $material['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this material?')">
                                                         <i class="bi bi-trash"></i> Delete
                                                     </a>
                                                 </div>
@@ -469,6 +484,48 @@
                     <?php endif; ?>
                 </div>
             </div>
+
+            <!-- Enrolled Students -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Enrolled Students (<?= $totalEnrolled ?>)</h5>
+                </div>
+                <div class="card-body">
+                    <?php 
+                    $approvedEnrollments = array_filter($enrollments, function($e) { 
+                        return $e['status'] === 'approved'; 
+                    });
+                    ?>
+                    <?php if(empty($approvedEnrollments)): ?>
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i>
+                            <h5 class="mt-3 text-muted">No students enrolled yet</h5>
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Enrollment Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach($approvedEnrollments as $enrollment): ?>
+                                        <tr>
+                                            <td><i class="bi bi-person-circle text-success"></i> <?= esc($enrollment['student_name']) ?></td>
+                                            <td><?= esc($enrollment['student_email']) ?></td>
+                                            <td><?= date('M d, Y', strtotime($enrollment['enrollment_date'])) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
         </main>
     </div>
 

@@ -26,6 +26,12 @@ class AuthFilter implements FilterInterface
             return redirect()->to(site_url('login'))->with('error', 'Please login to access this page.');
         }
 
+        $role = session()->get('role');
+        if ($role === 'user') {
+            session()->set('role', 'student');
+            $role = 'student';
+        }
+
         // Optional: Check for specific role requirements
         if ($arguments !== null) {
             $role = session()->get('role');

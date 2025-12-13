@@ -35,7 +35,16 @@ abstract class BaseController extends Controller
      *
      * @var list<string>
      */
-    protected $helpers = [];
+    protected $helpers = ['url', 'form'];
+ 
+     protected $session;
+    
+    /**
+     * Notification model instance
+     *
+     * @var \App\Models\NotificationModel
+     */
+    protected $notificationModel;
 
     /**
      * Be sure to declare properties for any property fetch you initialized.
@@ -51,8 +60,50 @@ abstract class BaseController extends Controller
         // Do Not Edit This Line
         parent::initController($request, $response, $logger);
 
-        // Preload any models, libraries, etc, here.
-
-        // E.g.: $this->session = service('session');
+        // Load notification model
+        $this->notificationModel = new \App\Models\NotificationModel();
+        
+        // Load session service
+        $this->session = service('session');
+        
+        // Share notification data with all views if user is logged in
+        if ($this->session->has('id') || $this->session->has('user_id')) {
+            $this->shareNotificationData();
+        }
+    }
+    
+    /**
+     * Share notification data with all views
+     */
+    protected function shareNotificationData()
+    {
+        $unreadCount = 0;
+        $notifications = [];
+        
+        if ($this->session->has('id') || $this->session->has('user_id')) {
+            $userId = $this->session->get('id') ?? $this->session->get('user_id');
+            $unreadCount = $this->notificationModel->getUnreadCount($userId);
+            $notifications = $this->notificationModel->getNotificationsForUser($userId);
+        }
+        
+        // Make data available to all views
+        $data = [
+            'unreadNotificationCount' => $unreadCount,
+            'notifications' => $notifications
+        ];
+        
+        // Share with all views
+        $this->setViewData($data);
+    }
+    
+    /**
+     * Set view data that should be available to all views
+     * 
+     * @param array $data Data to be made available to views
+     */
+    protected function setViewData(array $data = [])
+    {
+        $view = service('renderer');
+        $view->setData($data);
     }
 }
